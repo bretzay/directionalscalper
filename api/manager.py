@@ -403,45 +403,39 @@ class Manager:
                 logging.info(f"Sending request to {url} (Attempt: {retry + 1})")
                 header, raw_json = send_public_request(url=url)
                 
-                if isinstance(raw_json, list):
-                    logging.info(f"Received {len(raw_json)} assets from API")
-                    
-                    for asset in raw_json:
-                        symbol = asset.get("Asset", "")
-                        min_qty = asset.get("Min qty", 0)
-                        usd_price = asset.get("Price", float('inf')) 
-                        
-                        logging.info(f"Processing symbol {symbol} with min_qty {min_qty} and USD price {usd_price}")
-
-                        if blacklist and any(fnmatch.fnmatch(symbol, pattern) for pattern in blacklist):
-                            logging.debug(f"Skipping {symbol} as it's in blacklist")
-                            continue
-
-                        if whitelist and symbol not in whitelist:
-                            logging.debug(f"Skipping {symbol} as it's not in whitelist")
-                            continue
-
-                        # Check against the max_usd_value, if provided
-                        if max_usd_value is not None and usd_price > max_usd_value:
-                            logging.debug(f"Skipping {symbol} as its USD price {usd_price} is greater than the max allowed {max_usd_value}")
-                            continue
-
-                        logging.debug(f"Processing symbol {symbol} with min_qty {min_qty} and USD price {usd_price}")
-
-                        if min_qty_threshold is None or min_qty <= min_qty_threshold:
-                            symbols.append(symbol)
-
-                    logging.info(f"Returning {len(symbols)} symbols")
-                    
-                    # If successfully fetched, update the cache and its expiry time
-                    if symbols:
-                        self.rotator_symbols_cache = symbols
-                        self.rotator_symbols_cache_expiry = datetime.now() + timedelta(seconds=self.cache_life_seconds)
-
-                    return symbols
-
-                else:
+                if not isinstance(raw_json, list):
                     logging.warning("Unexpected data format. Expected a list of assets.")
+                    continue
+                
+                logging.info(f"Received {len(raw_json)} assets from API")
+                    
+                for asset in raw_json:
+                    symbol = asset.get("Asset", "")
+                    min_qty = asset.get("Min qty", 0)
+                    usd_price = asset.get("Price", float('inf')) 
+                    
+                    logging.info(f"Processing symbol {symbol} with min_qty {min_qty} and USD price {usd_price}")
+                    if blacklist and any(fnmatch.fnmatch(symbol, pattern) for pattern in blacklist):
+                        logging.debug(f"Skipping {symbol} as it's in blacklist")
+                        continue
+                    if whitelist and symbol not in whitelist:
+                        logging.debug(f"Skipping {symbol} as it's not in whitelist")
+                        continue
+                    # Check against the max_usd_value, if provided
+                    if max_usd_value is not None and usd_price > max_usd_value:
+                        logging.debug(f"Skipping {symbol} as its USD price {usd_price} is greater than the max allowed {max_usd_value}")
+                        continue
+                    logging.debug(f"Processing symbol {symbol} with min_qty {min_qty} and USD price {usd_price}")
+                    if min_qty_threshold is None or min_qty <= min_qty_threshold:
+                        symbols.append(symbol)
+                logging.info(f"Returning {len(symbols)} symbols")
+                
+                # If successfully fetched, update the cache and its expiry time
+                if symbols:
+                    self.rotator_symbols_cache = symbols
+                    self.rotator_symbols_cache_expiry = datetime.now() + timedelta(seconds=self.cache_life_seconds)
+                return symbols
+
                     
             except requests.exceptions.RequestException as e:
                 logging.warning(f"Request failed: {e}")

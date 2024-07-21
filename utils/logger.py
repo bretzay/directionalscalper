@@ -1,3 +1,4 @@
+
 import os
 import logging
 import logging.handlers as handlers
@@ -16,7 +17,7 @@ def Logger(
     backups: int = 5,
     bytes: int = 5000000,
     stream: bool = False,
-):
+) :
     log = logging.getLogger(logger_name)
     if log.handlers:
         # Logger is already configured, do not add new handlers
