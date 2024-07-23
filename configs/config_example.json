@@ -1,27 +1,18 @@
 {
     "test_orders_enabled": false,
     "logger_level": "info",
-    "Coin_Filter": {
-        "volume_check": false,
-        "min_distance": 0.15,
-        "min_volume": 10000,
+    "coin_filter": {
         "max_usd_value": 50,
-        "max_min_qty": 0,
-        "max_abs_funding_rate": 0.0002,
         "blacklist": [
             "BTCUSDT",
             "ETHUSDT"
             ],
         "whitelist": []
     },
-    "Risk_Management": {
+    "risk_management": {
         "trading_allowed":{
             "long": true,
             "short": true
-        },
-        "wallet_exposure":{
-        "long": 0.02,
-        "short":0.01
         },
         "upnl_profit_pct": 0.0029,
         "max_upnl_profit_pct": 0.004,
@@ -30,46 +21,45 @@
             "short": false
         }
     },
-    "Drawdown_Behaviour":{
-        "Grid":{
+    "drawdown_behavior":{
+        "grid":{
             "additional_entries_on_signal": false,
             "levels": 3,
             "strength": 1.4,
-            "outer_price_distance": 0.059,
-            "min_outer_price_distance": 0.019,
-            "max_outer_price_distance": 0.039
-        },
-        "Auto_Reduce":{
-            "entry_during_au":false,
-            "pnl_based_au":{
-                "enabled":false,
-                "upnl_start_pct":0.068
+            "min_gridspan": 0.019,
+            "max_gridspan": 0.039,
+            "wallet_exposure":{
+                "long": 0.02,
+                "short":0.01
             },
-            "margin_based_au":{
-                "enabled":false,
-                "margin_start_pct": 0.5
+            "auto_reduce":{
+                "entry_during_au":false,
+                "pnl_based_au":{
+                    "enabled":false,
+                    "upnl_start_pct":0.068
+                },
+                "margin_based_au":{
+                    "enabled":false,
+                    "margin_start_pct": 0.5
+                },
+                "pnl_based_with_cooldown":{
+                    "enabled": false,
+                    "start_pct": 0.051
+                }
             },
-            "pnl_based_with_cooldown":{
+            "failsafe":{
                 "enabled": false,
-                "start_pct": 0.051
+                "start_pct": 0.07
             }
         },
-        "Stoploss":{
+        "stoploss":{
             "normal_sl":{
                 "enabled":false,
                 "start_pct":0.05
-            },
-            "liquidation_sl":{
-                "enabled":false,
-                "liquidation_dist_pct": 0.5
             }
-        },
-        "Failsafe":{
-            "enabled": false,
-            "start_pct": 0.07
         }
     },
-    "Dashboard":{
+    "dashboard":{
         "enabled": false,
         "shared_data_path": "data/"
     },

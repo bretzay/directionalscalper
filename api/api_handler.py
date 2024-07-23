@@ -11,19 +11,18 @@ import fnmatch
 import requests
 # I know It's weird, but I just want to be able to test my code from the main.py
 # The try catch can be deleted and back to normal when we do not need to test api handler directly.
-try:
-    from utils.logger import Logger
-    from utils.util import load_json
-    from config import Config
-except ImportError:
-    import sys
-    # Add the project root to the PYTHONPATH
-    project_root = Path(__file__).resolve().parent.parent
-    sys.path.append(str(project_root))
-    from utils.logger import Logger
-    from utils.util import load_json
-    from config import Config
-
+#try:
+#    from utils.logger import Logger
+#    from utils.util import load_json
+#    from config import Config
+#except ImportError:
+import sys
+# Add the project root to the PYTHONPATH
+project_root = Path(__file__).resolve().parent.parent
+sys.path.append(str(project_root))
+from utils.logger import Logger
+from utils.util import load_json
+from config import Config
 # TODO: change all get_auto_rotate_symbols() of the old manager.py to the new API_Handler.ranking.rotator_list or something like that when it is done.
 # TODO: Change all the min_qty_threshold to max_min_qty to be clearer?
 
@@ -243,10 +242,25 @@ class HTTPRequestError(Exception):
     def __str__(self):
         return f"HTTP Request to {self.url} failed with code {self.code}: {self.msg}"
 
+
+def test_functions(parameter, functions: list):
+    new_list: list = [function(parameter) for function in functions]
+    print(sum(new_list))
+
+def out1(parameter):
+    print(parameter)
+    return True
+def out2(parameter):
+    print("test2")
+    return True
+def out3(parameter):
+    print("test3")
+    return False
+def out4(parameter):
+    print("tes4")
+    return False
+
 def main():
-    #apiConfig = ApiConfig("bybit","test_acc")
-    #config = Ranking_handler(apiConfig)   
-    #config.get_rotating_symbols()
     config = Config("configs/config.json")
 
 if __name__ == "__main__":
