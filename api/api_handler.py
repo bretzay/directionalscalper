@@ -262,6 +262,5 @@ def out4(parameter):
 
 def main():
     config = Config("configs/config.json")
-
 if __name__ == "__main__":
     main()

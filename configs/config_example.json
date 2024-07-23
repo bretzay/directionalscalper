@@ -32,7 +32,7 @@
                 "long": 0.02,
                 "short":0.01
             },
-            "auto_reduce":{
+            "auto_unstuck":{
                 "entry_during_au":false,
                 "pnl_based_au":{
                     "enabled":false,
@@ -42,9 +42,9 @@
                     "enabled":false,
                     "margin_start_pct": 0.5
                 },
-                "pnl_based_with_cooldown":{
+                "pnl_based_cooldown":{
                     "enabled": false,
-                    "start_pct": 0.051
+                    "upnl_start_pct": 0.051
                 }
             },
             "failsafe":{
@@ -53,10 +53,8 @@
             }
         },
         "stoploss":{
-            "normal_sl":{
-                "enabled":false,
-                "start_pct":0.05
-            }
+            "enabled":false,
+            "start_pct":0.05
         }
     },
     "dashboard":{
