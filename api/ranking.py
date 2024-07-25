@@ -39,7 +39,7 @@ class Ranking_handler:
         self.max_usd_value = self.config.coin_filters.max_usd_value
         self.blacklist = self.config.coin_filters.blacklist
         self.whitelist = self.config.coin_filters.whitelist
-        self.rotator_url = f"https://api.quantumvoid.org/volumedata/rotatorsymbols_{self.api.data_source_exchange.replace('_', '')}.json"
+        self.rotator_url = f"{self.api.url}{self.api.data_source_exchange.replace('_', '')}.json"
 
         threading.Thread(target= self.get_rotating_symbols, daemon= True).start()
     def get_rotating_symbols(self):

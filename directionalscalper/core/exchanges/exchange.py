@@ -739,73 +739,6 @@ class Exchange:
         logging.error(f"Failed to fetch OHLCV data after {max_retries} retries.")
         return pd.DataFrame()
 
-    # def fetch_ohlcv(self, symbol, timeframe='1d', limit=None, max_retries=100, base_delay=10, max_delay=60):
-    #     """
-    #     Fetch OHLCV data for the given symbol and timeframe.
-        
-    #     :param symbol: Trading symbol.
-    #     :param timeframe: Timeframe string.
-    #     :param limit: Limit the number of returned data points.
-    #     :param max_retries: Maximum number of retries for API calls.
-    #     :param base_delay: Base delay for exponential backoff.
-    #     :param max_delay: Maximum delay for exponential backoff.
-    #     :return: DataFrame with OHLCV data.
-    #     """
-    #     retries = 0
-
-    #     while retries < max_retries:
-    #         try:
-    #             with self.rate_limiter:
-    #                 # Fetch the OHLCV data from the exchange
-    #                 ohlcv = self.exchange.fetch_ohlcv(symbol, timeframe, limit=limit)  # Pass the limit parameter
-                    
-    #                 # Create a DataFrame from the OHLCV data
-    #                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
-                    
-    #                 # Convert the timestamp to datetime
-    #                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-                    
-    #                 # Set the timestamp as the index
-    #                 df.set_index('timestamp', inplace=True)
-                    
-    #                 return df
-
-    #         except ccxt.RateLimitExceeded as e:
-    #             retries += 1
-    #             delay = min(base_delay * (2 ** retries) + random.uniform(0, 0.1 * (2 ** retries)), max_delay)
-    #             logging.info(f"Rate limit exceeded: {e}. Retrying in {delay:.2f} seconds...")
-    #             time.sleep(delay)
-
-    #         except ccxt.BaseError as e:
-    #             # Log the error message
-    #             logging.info(f"Failed to fetch OHLCV data: {self.exchange.id} {e}")
-    #             # Log the traceback for further debugging
-    #             logging.error(traceback.format_exc())
-    #             return pd.DataFrame()
-
-    #         except Exception as e:
-    #             # Log the error message and traceback
-    #             logging.info(f"Unexpected error occurred while fetching OHLCV data: {e}")
-    #             logging.info(traceback.format_exc())
-                
-    #             # Attempt to handle the specific 'string indices must be integers' error
-    #             if isinstance(e, TypeError) and 'string indices must be integers' in str(e):
-    #                 logging.info(f"TypeError occurred: {e}")
-                    
-    #                 # Print the response for debugging
-    #                 logging.info(f"Response content: {self.exchange.last_http_response}")
-                    
-    #                 try:
-    #                     # Attempt to parse the response
-    #                     response = json.loads(self.exchange.last_http_response)
-    #                     logging.info(f"Parsed response into a dictionary: {response}")
-    #                 except json.JSONDecodeError as json_error:
-    #                     logging.info(f"Failed to parse response: {json_error}")
-                
-    #             return pd.DataFrame()
-
-    #     raise Exception(f"Failed to fetch OHLCV data after {max_retries} retries.")
-
     def get_orderbook(self, symbol, max_retries=3, retry_delay=5) -> dict:
         values = {"bids": [], "asks": []}
 
@@ -946,21 +879,6 @@ class Exchange:
             logging.info(f"An unknown error occurred in get_current_price_binance(): {e}")
         return current_price
 
-    # def get_leverage_tiers_binance(self, symbols: Optional[List[str]] = None):
-    #     try:
-    #         tiers = self.exchange.fetch_leverage_tiers(symbols)
-    #         for symbol, brackets in tiers.items():
-    #             print(f"\nSymbol: {symbol}")
-    #             for bracket in brackets:
-    #                 print(f"Bracket ID: {bracket['bracket']}")
-    #                 print(f"Initial Leverage: {bracket['initialLeverage']}")
-    #                 print(f"Notional Cap: {bracket['notionalCap']}")
-    #                 print(f"Notional Floor: {bracket['notionalFloor']}")
-    #                 print(f"Maintenance Margin Ratio: {bracket['maintMarginRatio']}")
-    #                 print(f"Cumulative: {bracket['cum']}")
-    #     except Exception as e:
-    #         logging.error(f"An error occurred while fetching leverage tiers: {e}")
-
     def get_symbol_info_binance(self, symbol):
         try:
             markets = self.exchange.fetch_markets()
@@ -973,15 +891,6 @@ class Exchange:
                     return min_notional, min_qty
         except Exception as e:
             logging.error(f"An error occurred while fetching symbol info: {e}")
-
-    # def get_market_data_binance(self, symbol):
-    #     market_data = self.exchange.load_markets(reload=True)  # Force a reload to get fresh data
-    #     return market_data[symbol]
-
-    # def get_market_data_binance(self, symbol):
-    #     market_data = self.exchange.load_markets(reload=True)  # Force a reload to get fresh data
-    #     print("Symbols:", market_data.keys())  # Print out all available symbols
-    #     return market_data[symbol]
 
     def get_min_lot_size_binance(self, symbol):
         market_data = self.get_market_data_binance(symbol)
@@ -1162,23 +1071,6 @@ class Exchange:
                 logging.error(f"An error occurred during the health check: {e}")  # Log any errors
                 
             time.sleep(interval_seconds)
-
-    # def cancel_all_auto_reduce_orders_bybit(self, symbol: str, auto_reduce_order_ids: List[str]):
-    #     try:
-    #         orders = self.fetch_open_orders(symbol)
-    #         logging.info(f"[Thread ID: {threading.get_ident()}] cancel_all_auto_reduce_orders function in exchange class accessed")
-    #         logging.info(f"Fetched orders: {orders}")
-
-    #         for order in orders:
-    #             if order['status'] in ['open', 'partially_filled']:
-    #                 order_id = order['id']
-    #                 # Check if the order ID is in the list of auto-reduce orders
-    #                 if order_id in auto_reduce_order_ids:
-    #                     self.cancel_order(order_id, symbol)
-    #                     logging.info(f"Cancelling auto-reduce order: {order_id}")
-
-    #     except Exception as e:
-    #         logging.warning(f"An unknown error occurred in cancel_all_auto_reduce_orders_bybit(): {e}")
 
     #v5 
     def cancel_all_reduce_only_orders_bybit(self, symbol: str) -> None:
@@ -1366,24 +1258,3 @@ class Exchange:
                 raise ValueError("Invalid order type. Use 'limit' or 'market'.")
 
         return order
-
-    # def get_symbol_precision_bybit(self, symbol: str) -> Tuple[int, int]:
-    #     try:
-    #         market = self.exchange.market(symbol)
-    #         price_precision = int(market['precision']['price'])
-    #         quantity_precision = int(market['precision']['amount'])
-    #         return price_precision, quantity_precision
-    #     except Exception as e:
-    #         print(f"An error occurred: {e}")
-    #         return None, None
-
-    # def get_symbol_precision_bybit(self, symbol: str) -> Tuple[int, int]:
-    #     market = self.exchange.market(symbol)
-    #     price_precision = int(market['precision']['price'])
-    #     quantity_precision = int(market['precision']['amount'])
-    #     return price_precision, quantity_precision
-
-    # def _get_symbols(self):
-    #     markets = self.exchange.load_markets()
-    #     symbols = [market['symbol'] for market in markets.values()]
-    #     return symbols
