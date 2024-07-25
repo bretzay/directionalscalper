@@ -43,39 +43,37 @@ class Ranking_handler:
 
         threading.Thread(target= self.get_rotating_symbols, daemon= True).start()
     def get_rotating_symbols(self):
-        #while True:
-        if self.cached_symbol and not self._is_cache_expired():
-            time.sleep(self.cache_lasting_time)
-            #continue
-            return
-        try:
-            logging.info(f"Sending request to {self.rotator_url}")
-            header, raw_json = self.send_public_request()
-            if not isinstance(raw_json, list):
-                logging.warning("Unexpected data format. Expected a list of assets.")
-                #continue
-                return
-            logging.info(f"Received {len(raw_json)} assets from API")
-            self.caching_symbol = [
-                symbol
-                for asset in raw_json if ( 
-                symbol := asset.get("Asset", ""), 
-                usd_price := asset.get("Price", float('inf')))
-                and self._is_blacklist(symbol)
-                and self._is_whitelist(symbol)
-                and self._is_max_usd_value(symbol, usd_price)
-            ]
-            logging.info(f"Returning {len(self.caching_symbol)} symbols")
-            if self.caching_symbol:
-                self.cached_symbol = self.caching_symbol.copy()
-                self.caching_symbol.clear()
-                self.cached_date = time.time()
-        except requests.exceptions.RequestException as e:
-            logging.warning(f"Request failed: {e}")
-        except json.decoder.JSONDecodeError as e:
-            logging.warning(f"Failed to parse JSON: {e}. Response: {raw_json}")
-        except Exception as e:
-            logging.warning(f"Unexpected error occurred: {e}")
+        while True:
+            if self.cached_symbol and not self._is_cache_expired():
+                time.sleep(self.cache_lasting_time)
+                continue
+            try:
+                logging.info(f"Sending request to {self.rotator_url}")
+                header, raw_json = self.send_public_request()
+                if not isinstance(raw_json, list):
+                    logging.warning("Unexpected data format. Expected a list of assets.")
+                    return
+                logging.info(f"Received {len(raw_json)} assets from API")
+                self.caching_symbol = [
+                    symbol
+                    for asset in raw_json if ( 
+                    symbol := asset.get("Asset", ""), 
+                    usd_price := asset.get("Price", float('inf')))
+                    and self._is_blacklist(symbol)
+                    and self._is_whitelist(symbol)
+                    and self._is_max_usd_value(symbol, usd_price)
+                ]
+                logging.info(f"Returning {len(self.caching_symbol)} symbols")
+                if self.caching_symbol:
+                    self.cached_symbol = self.caching_symbol.copy()
+                    self.caching_symbol.clear()
+                    self.cached_date = time.time()
+            except requests.exceptions.RequestException as e:
+                logging.warning(f"Request failed: {e}")
+            except json.decoder.JSONDecodeError as e:
+                logging.warning(f"Failed to parse JSON: {e}. Response: {raw_json}")
+            except Exception as e:
+                logging.warning(f"Unexpected error occurred: {e}")
 
     def _is_blacklist(self, symbol) -> str | None:
         if self.blacklist and any(fnmatch.fnmatch(symbol, pattern) for pattern in self.blacklist):
