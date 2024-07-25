@@ -37,6 +37,7 @@ def create_new_config(config_path: str, config_input: str) -> None:
             truncated_config_path = config_path.removesuffix(config_input)
             os.makedirs(truncated_config_path,exist_ok=True)
             copy(EXAMPLE_FILE, config_path)
+            print("Your file has been successfully created.")
             exit()
         except PermissionError as e:
             print("I can't write a file here, please select somewhere else.")
