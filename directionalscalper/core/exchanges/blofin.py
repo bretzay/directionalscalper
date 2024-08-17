@@ -38,36 +38,6 @@ class BlofinExchange(Exchange):
         except Exception as e:
             logging.info(f"Last order time exception {e}")
 
-    def initialize_symbol_monitoring(self, symbol):
-        if symbol not in self.last_active_time:
-            self.last_active_time[symbol] = time.time()
-            logging.info(f"Started monitoring {symbol} at {self.last_active_time[symbol]}")
-     
-    def get_symbol_info_and_positions(self, symbol: str):
-        try:
-            market = self.exchange.market(symbol)
-            logging.info(f"Symbol: {market['symbol']}")
-            logging.info(f"Base: {market['base']}")
-            logging.info(f"Quote: {market['quote']}")
-            logging.info(f"Type: {market['type']}")
-            logging.info(f"Settle: {market['settle']}")
-
-            positions = self.exchange.fetch_positions([symbol])
-            for position in positions:
-                logging.info(f"Position Info:")
-                logging.info(f"Symbol: {position['symbol']}")
-                logging.info(f"Side: {position['side']}")
-                logging.info(f"Amount: {position['amount']}")
-                logging.info(f"Entry Price: {position['entryPrice']}")
-                logging.info(f"Unrealized PNL: {position['unrealizedPnl']}")
-                logging.info(f"Leverage: {position['leverage']}")
-                logging.info(f"Margin Type: {position['marginType']}")
-                logging.info(f"Liquidation Price: {position['liquidationPrice']}")
-            return positions
-        except Exception as e:
-            logging.info(f"Error fetching symbol info and positions: {e}")
-            return []
-
     def get_market_data_blofin(self, symbol: str) -> dict:
         values = {"precision": 0.0, "leverage": 0.0, "min_qty": 0.0}
         try:

@@ -24,10 +24,10 @@ def Logger(
         return log
 
     formatter = logging.Formatter(
-        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        fmt="%(asctime)s - %(name)s - %(levelname)s - Thread:%(threadName)s(%(thread)s) - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
+    
     file_path = Path("logs")
     file_path.mkdir(exist_ok=True)  # Ensure the directory exists
     log_file = file_path / filename

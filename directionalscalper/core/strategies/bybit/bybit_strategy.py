@@ -521,20 +521,6 @@ class BybitStrategy(BaseStrategy):
         except Exception as e:
             logging.info(f"An error occurred while canceling all orders for {symbol}: {e}")
 
-    def get_all_open_orders_bybit(self):
-        """
-        Fetch all open orders for all symbols from the Bybit API.
-
-        :return: A list of open orders for all symbols.
-        """
-        try:
-            # Call fetch_open_orders with no symbol to get orders for all symbols
-            all_open_orders = self.exchange.fetch_open_orders()
-            return all_open_orders
-        except Exception as e:
-            print(f"An error occurred while fetching all open orders: {e}")
-            return []
-
     def cancel_old_entries_bybit(self, symbol):
         # Cancel entries
         try:

@@ -1,6 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass,field
-from utils.util import load_json
+from typing import Optional
+
+from utils.utils import load_json
 from utils.logger import Logger
 
 logging = Logger(logger_name="Configuration", filename="Configuration.log", stream= True)
@@ -18,8 +20,8 @@ class Config:
     coin_filters: Coin_Filters = field(init= False)
     risk_management: Risk_Management = field(init= False)
     drawdown_behavior: drawdown_behavior = field(init= False)
-    dashboard: Dashboard | None = field(init= False, default= None)
-    alerts: Alerts | None = field(init= False, default= None)
+    dashboard: Optional[Dashboard] = field(init= False, default= None)
+    alerts: Optional[Alerts] = field(init= False, default= None)
 
     def __post_init__(self):
         try: 
@@ -386,7 +388,7 @@ def _str_to_type(value_type: str) -> tuple:
     return new_value_type
 
 # SPECIFIC VERIFICATIONS : 
-def _is_pct(item: tuple) -> float:
+def _is_pct(item: tuple[str,float]) -> float:
     """Checks if percent (float) as tuple built like : [0] is the key, [1] is the value"""
     if isinstance(item[1], float) and 1 > item[1] > 0:
         return item[1]

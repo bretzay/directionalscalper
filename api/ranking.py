@@ -7,7 +7,8 @@ import threading
 import requests
 from dataclasses import dataclass, field
 
-import api.api_handler as api_handler
+from api.api_config import ApiConfig
+from config import Config
 from utils.logger import Logger
 
 logging = Logger(logger_name= "api_handler", filename= "Api.log", stream= True,level= "debug")
@@ -24,8 +25,8 @@ class HTTPRequestError(Exception):
 
 @dataclass
 class Ranking_handler:
-    api: api_handler.ApiConfig = field(init= True, repr= False)
-    config: api_handler.Config = field(init= True, repr= False)
+    api: ApiConfig = field(init= True, repr= False)
+    config: Config = field(init= True, repr= False)
     max_usd_value: int = field(init= False)
     blacklist: list = field(default_factory= list, init= False)
     whitelist: list = field(default_factory= list, init= False)
@@ -40,8 +41,8 @@ class Ranking_handler:
         self.blacklist = self.config.coin_filters.blacklist
         self.whitelist = self.config.coin_filters.whitelist
         self.rotator_url = f"{self.api.url}{self.api.data_source_exchange.replace('_', '')}.json"
+        threading.Thread(target= self.get_rotating_symbols, daemon= True, name= "ranking_handler").start()
 
-        threading.Thread(target= self.get_rotating_symbols, daemon= True).start()
     def get_rotating_symbols(self):
         while True:
             if self.cached_symbol and not self._is_cache_expired():
