@@ -32,6 +32,10 @@ class ApiConfig:
     except ValueError as e:
         logging.error(f"A value was awaited but was not available, please verify your account.json file.\n{e}")
         exit()
+    except KeyError as e:
+        logging.error(f"There is a missing category in your account.json file: {e}")
+        print(f"There is a missing category in your account.json file: {e}")
+        exit()
 
     def __post_init__(self):
         self.find_exchange()
