@@ -7,7 +7,7 @@ from api.api_config import ApiConfig
 @dataclass
 class Positions:
     symbol: str
-    long: dict[str, int|float] = {
+    long: dict[str, int|float] = field(default_factory= {
         "qty": 0.0,
         "price": 0.0,
         "realised": 0,
@@ -16,8 +16,8 @@ class Positions:
         "upnl_pct": 0,
         "liq_price": 0.0,
         "entry_price": 0.0
-    }
-    short: dict[str, int|float] = {
+    })
+    short: dict[str, int|float]  = field(default_factory= {
         "qty": 0.0,
         "price": 0.0,
         "realised": 0,
@@ -26,7 +26,7 @@ class Positions:
         "upnl_pct": 0,
         "liq_price": 0.0,
         "entry_price": 0.0
-    }
+    })
 
 @dataclass
 class Exchange(ABC):
