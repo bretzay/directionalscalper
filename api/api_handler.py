@@ -3,7 +3,6 @@ from pathlib import Path
 import threading
 
 
-
 import sys
 # Add the project root to the PYTHONPATH
 project_root = Path(__file__).resolve().parent.parent
@@ -13,7 +12,7 @@ from utils.logger import Logger
 from config import Config
 from ranking import Ranking_handler
 from api.api_config import ApiConfig
-from api.exchanges.exchange import Exchange, Bybit
+from api.exchanges.bybit import BybitExchange
 # TODO: change all get_auto_rotate_symbols() of the old manager.py to the new API_Handler.ranking.rotator_list or something like that when it is done.
 # TODO: Change all the min_qty_threshold to max_min_qty to be clearer?
 
@@ -26,7 +25,7 @@ def main():
     apiConfig: ApiConfig = ApiConfig("bybit", "test_acc")
     print(apiConfig)
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
-    exchange: Bybit = Bybit(apiConfig, "test")
+    exchange: BybitExchange = BybitExchange(apiConfig)
     print(exchange)
 if __name__ == "__main__":
     main()
