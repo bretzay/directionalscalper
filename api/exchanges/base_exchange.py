@@ -28,16 +28,7 @@ class Positions:
         "entry_price": 0.0
     })
 
-@dataclass
-class Exchange(ABC):
-    config: ApiConfig
-    test: str
-    def __post_init__(self):
-        self.test = self.test + "yay"
-        print("here")
-        if self.__class__ == Exchange:
-            print("test")
-    
+class BaseExchange(ABC):
     # Account information / Changes
     @abstractmethod
     def get_balance(self) -> Decimal: ...
@@ -84,12 +75,3 @@ class Exchange(ABC):
     def get_symbol_info(self, symbol: str) -> dict[str, str|bool|int|float|dict]: ...
     @abstractmethod
     def get_position_info(self, symbol: str): ...
-
-
-
-@dataclass
-class Bybit(Exchange):
-    def __post_init__(self):
-        super().__post_init__()
-    def get_balance(self) -> Decimal:
-        ...
