@@ -1,39 +1,50 @@
-from decimal import Decimal
+from utils.utils import Decimal
 
 import ccxt
 
 from utils.logger import Logger
 from api.exchanges.base_exchange import BaseExchange
+from api.api_config import ApiConfig
 
 
 FILENAME: str = __name__.split(".")[-1]
 logging = Logger(logger_name= "api_handler_bybit", filename= f"{FILENAME}.log", stream= True,level= "debug")
 
-class BybitExchange():
-    def __init__(self, config):
-        super().__init__()
+class BybitExchange():#BaseExchange):
+    def __init__(self, config: ApiConfig):
+        #super().__init__()
         self.api_config = config
-        #self.exchange = ccxt.bybit()
-        #print(self.exchange)
-        #exit()
+        self.exchange = ccxt.bybit({
+            "apiKey": self.api_config.credentials["api_key"],
+            "secret": self.api_config.credentials["api_secret"]
+        })
     
-    
+
     def get_balance(self) -> Decimal:
-        if self.exchange.has['fetchBalance']:
-            try:
-                # Fetch the balance with params to specify the account type if needed
-                balance_response = self.exchange.fetch_balance({'type': 'swap'})
+        """Get the balance on the account, in the quote currency."""
+        # Checks if fetchBalance module exists in CCXT
+        if not self.exchange.has['fetchBalance']:
+            return None
+        
+        # Checks for spot or derivative account
+        account_type = "SPOT" if self.api_config.market_type == "spot" else "CONTRACT"
 
-                # Log the raw response for debugging purposes
-                #logging.info(f"Raw balance response from Bybit: {balance_response}")
+        # Fetch the balance with params to specify the account type if needed
+        try:
+            balance_response = self.exchange.fetch_balance({"accountType": account_type})
+        except ccxt.ExchangeError as e:
+            logging.error(f"There was an Exchange error while fetching balance: {e}")
 
-                # Parse the balance
-                if quote in balance_response['total']:
-                    total_balance = balance_response['total'][quote]
-                    return total_balance
-                else:
-                    logging.info(f"Balance for {quote} not found in the response.")
-            except Exception as e:
-                logging.info(f"Error fetching balance from Bybit: {e}")
-
+        # Parse the balance
+        if "USDT" in balance_response['total']:
+            total_balance = Decimal(str(balance_response['total']["USDT"]), 2)
+            return total_balance
+        
+        logging.info(f"There was no USDT found on this account.")
         return None
+
+    def cancel_all_orders(self):
+        ...
+    
+    def cancel_order(self):
+        ...

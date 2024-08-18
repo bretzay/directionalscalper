@@ -34,7 +34,7 @@ class ApiConfig:
         exit()
     except KeyError as e:
         logging.error(f"There is a missing category in your account.json file: {e}")
-        print(f"There is a missing category in your account.json file: {e}")
+        print(f"There is a missing key in your account.json file: {e}")
         exit()
 
     def __post_init__(self):
@@ -45,16 +45,19 @@ class ApiConfig:
                 logging.error(f"The chosen exchange has an invalid market type, please choose a valid one: {', '.join(i for i in AUTHORIZED_MARKET_TYPE)}.")
                 exit()
         self.get_credentials()
+        self.account_file = None # Reduce memory consumption.
 
     def get_credentials(self) -> None :
         """Create a dictionary with the api key and the api secret."""
+        REQUIRED_CREDENTIAL: list[str] = ["api_key", "api_secret"]
+
         self.credentials: dict[str,str] = {
         key: value
         for key, value in self.exchange.items()
-        if key == "api_key" or key == "api_secret"
-    }
-        if self.credentials.__len__() != 2:
-            logging.error(f"There is an error in account.json. Only {self.credentials.__len__()} found, 2 are needed.")
+        if key in REQUIRED_CREDENTIAL
+        }
+        if self.credentials.__len__() < 2:
+            logging.error(f"There is an error in account.json. Only {self.credentials.__len__()} found, minimum 2 are required.")
             exit()
         
     def find_exchange(self):

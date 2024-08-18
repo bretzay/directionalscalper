@@ -2,7 +2,10 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import time
 from decimal import Decimal, getcontext
+
+# Implemented exchanges list:
 from api.api_config import ApiConfig
+
 
 @dataclass
 class Positions:
@@ -75,3 +78,25 @@ class BaseExchange(ABC):
     def get_symbol_info(self, symbol: str) -> dict[str, str|bool|int|float|dict]: ...
     @abstractmethod
     def get_position_info(self, symbol: str): ...
+
+
+from api.exchanges import * # Imports exchanges files here to avoid circular import
+def initiate_exchange(config: ApiConfig) -> BaseExchange:
+    """
+    Initiate an exchange subclass from the list available.
+    
+    Available exchanges: 
+        - Bybit
+    """
+    AVAILABLE_EXCHANGES: list[str] = ["Bybit", "Binance"]
+    match (config.exchange_name.lower()):
+        case "bybit":
+            return bybit.BybitExchange(config)
+        
+        case _:
+            print(f"""
+This exchange seems to not be implemented: {config.exchange_name.lower()}.
+List of available exchanges: {', '.join(AVAILABLE_EXCHANGES)}
+Verify initiate_exchange function if you're a developper.
+""")
+            exit()
