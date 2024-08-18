@@ -1,7 +1,6 @@
-from utils.utils import Decimal
-
 import ccxt
 
+from utils.utils import Decimal
 from utils.logger import Logger
 from api.exchanges.base_exchange import BaseExchange
 from api.api_config import ApiConfig

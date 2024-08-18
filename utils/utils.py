@@ -9,8 +9,12 @@ def load_json(file):
         print(f"No such file or directory, please verify your input. {e.filename}")
         exit()
 
-def Decimal(num: float|str, precision: int = 40):
+def Decimal(num: float|str, precision: int = 40, recursion: bool = False):
     zero_in_memory = 0
+    # Checks if scientific value and changes it to decimal before proceeding
+    if "e" in num and recursion == False:
+        num = Decimal(num, recursion=True)
+    # Checks if higher than 1 to ignore digits before the dot in the precision calculation
     if float(num) >= 1:
         precision += len(num.split(".")[0])
     else:
@@ -23,21 +27,21 @@ def Decimal(num: float|str, precision: int = 40):
         
     context = decimal.Context(prec= precision, rounding=decimal.ROUND_HALF_UP)
     num = context.create_decimal(num)
-    if not zero_in_memory:
-        return num
     #Recover the zeroes by adding them back and rounding if needed
     while zero_in_memory:
-        num = decimal_recover_zero(num)
+        num = decimal_recover_zero(num, precision)
+        num = ".".join(num)
         zero_in_memory -= 1
-    return ".".join(num)
+    return num
 
-def decimal_recover_zero(number: Decimal):
+def decimal_recover_zero(number: Decimal, precision: int):
     splited_num = str(number).split(".")
-    if splited_num[1][-1] in "56789":
-        list1 = list(splited_num[1])
-        list1[-2] = str(int(list1[-2]) + 1)
-        splited_num[1] = "".join(list1)
-    splited_num[1] = splited_num[1].removesuffix(splited_num[1][-1])
+    if len(splited_num[1]) >= precision:
+        if splited_num[1][-1] in "56789":
+            list1 = list(splited_num[1])
+            list1[-2] = str(int(list1[-2]) + 1)
+            splited_num[1] = "".join(list1)
+        splited_num[1] = splited_num[1].removesuffix(splited_num[1][-1])
     splited_num[1] = "0"+splited_num[1]
     return splited_num
 

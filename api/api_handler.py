@@ -26,8 +26,8 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
 
-    print(Decimal("0.052801", 3))
-    #print(exchange.get_balance())
+    #print(Decimal("0.0000052801", 3))
+    print(exchange.get_balance())
     
     # print(exchange)
 if __name__ == "__main__":
