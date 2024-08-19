@@ -1,6 +1,6 @@
 import ccxt
 
-from utils.utils import Decimal
+from utils.utils import createDecimal
 from utils.logger import Logger
 from api.exchanges.base_exchange import BaseExchange
 from api.api_config import ApiConfig
@@ -19,7 +19,7 @@ class BybitExchange():#BaseExchange):
         })
     
 
-    def get_balance(self) -> Decimal:
+    def get_balance(self) -> createDecimal:
         """Get the balance on the account, in the quote currency."""
         # Checks if fetchBalance module exists in CCXT
         if not self.exchange.has['fetchBalance']:
@@ -32,12 +32,12 @@ class BybitExchange():#BaseExchange):
         try:
             balance_response = self.exchange.fetch_balance({"accountType": account_type})
         except ccxt.ExchangeError as e:
-            logging.error(f"There was an Exchange error while fetching balance: {e}")
+            logging.error(f"There was an Exchange error while fetching balance: {str(e)}")
 
         # Parse the balance
         if "USDT" in balance_response['total']:
-            total_balance = Decimal(str(balance_response['total']["USDT"]), 2)
-            return total_balance
+            total_balance = createDecimal(str(balance_response['total']["USDT"]), 2)
+            return total_balance if total_balance > createDecimal(0.00, 2) else None
         
         logging.info(f"There was no USDT found on this account.")
         return None

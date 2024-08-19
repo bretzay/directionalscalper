@@ -7,7 +7,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.append(str(project_root))
 
 from utils.logger import Logger
-from utils.utils import Decimal
+from utils.utils import createDecimal
 from config import Config
 from ranking import Ranking_handler
 from api.api_config import ApiConfig
@@ -26,7 +26,6 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
 
-    #print(Decimal("0.0000052801", 3))
     print(exchange.get_balance())
     
     # print(exchange)
