@@ -40,7 +40,6 @@ class BybitExchange(Exchange):
         except Exception as e:
             logging.info(f"Last order time exception {e}")
 
-    # Assuming you have an initializer or a specific method where symbols start being monitored
     def initialize_symbol_monitoring(self, symbol):
         if symbol not in self.last_active_time:
             self.last_active_time[symbol] = time.time()
@@ -104,31 +103,6 @@ class BybitExchange(Exchange):
             #logging.info(f"Call Stack: {traceback.format_exc()}")
         
         return values       
-    # def get_market_data_bybit(self, symbol: str) -> dict:
-    #     values = {"precision": 0.0, "leverage": 0.0, "min_qty": 0.0}
-    #     try:
-    #         self.exchange.load_markets()
-    #         symbol_data = self.exchange.market(symbol)
-            
-    #         #print("Symbol data:", symbol_data)  # Debug print
-            
-    #         if "info" in symbol_data:
-    #             values["precision"] = symbol_data["precision"]["price"]
-    #             values["min_qty"] = symbol_data["limits"]["amount"]["min"]
-
-    #         # Fetch positions
-    #         positions = self.exchange.fetch_positions()
-
-    #         for position in positions:
-    #             if position['symbol'] == symbol:
-    #                 values["leverage"] = float(position['leverage'])
-
-    #     # except Exception as e:
-    #     #     logging.info(f"An unknown error occurred in get_market_data_bybit(): {e}")
-    #     #     logging.info(f"Call Stack: {traceback.format_exc()}")
-    #     except Exception as e:
-    #         logging.info(f"An unknown error occurred in get_market_data_bybit(): {e}")
-    #     return values
 
     def get_best_bid_ask_bybit(self, symbol):
         orderbook = self.exchange.get_orderbook(symbol)
@@ -215,8 +189,7 @@ class BybitExchange(Exchange):
             except Exception as e:
                 logging.info(f"Error fetching available balance from Bybit: {e}")
 
-        return None
-    
+        return None 
 
     def get_balance_bybit_unified(self, quote):
         if self.exchange.has['fetchBalance']:
@@ -277,7 +250,7 @@ class BybitExchange(Exchange):
         except Exception as e:
             logging.info(f"An error occurred while creating limit order on Bybit: {e}")
             return None
-        
+
     def create_tagged_limit_order_bybit(self, symbol: str, side: str, qty: float, price: float, positionIdx=0, isLeverage=False, orderLinkId=None, postOnly=True, params={}):
         try:
             # Directly prepare the parameters required by the `create_order` method
@@ -321,7 +294,6 @@ class BybitExchange(Exchange):
             logging.info(f"An error occurred in create_tagged_limit_order_bybit() for {symbol}: {e}")
             return {"error": str(e)}
 
-        
     def create_limit_order_bybit_unified(self, symbol: str, side: str, qty: float, price: float, positionIdx=0, params={}):
         try:
             if side == "buy" or side == "sell":
@@ -379,7 +351,7 @@ class BybitExchange(Exchange):
             return response
         except Exception as e:
             logging.info(f"Error cancelling orders: {e}")
-            
+
     def cancel_order_bybit(self, order_id, symbol):
         """
         Wrapper function to cancel an order on the exchange using the CCXT instance.
@@ -397,7 +369,7 @@ class BybitExchange(Exchange):
             logging.info(f"An error occurred while cancelling order {order_id} for {symbol}: {str(e)}")
             # Handle the exception as needed (e.g., retry, raise, etc.)
             return None
-        
+   
     def get_precision_and_limits_bybit(self, symbol):
         # Fetch the market data
         markets = self.exchange.fetch_markets()
@@ -426,7 +398,7 @@ class BybitExchange(Exchange):
                 return market['precision']
         
         return None
-    
+
     def transfer_funds_bybit(self, code: str, amount: float, from_account: str, to_account: str, params={}):
         """
         Transfer funds between different account types under the same UID.
@@ -458,7 +430,7 @@ class BybitExchange(Exchange):
         except Exception as e:
             logging.info(f"Error occurred during funds transfer: {e}")
             return None
-        
+
     def transfer_funds(self, code: str, amount: float, from_account: str, to_account: str, params={}):
         """
         Transfer funds between different account types under the same UID.
@@ -600,7 +572,7 @@ class BybitExchange(Exchange):
         except Exception as e:
             logging.info(f"Error cancelling open orders for {symbol}: {e}")
             return None
-        
+
     def get_current_max_leverage_bybit(self, symbol):
         try:
             # Fetch leverage tiers for the symbol

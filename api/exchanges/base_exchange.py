@@ -44,7 +44,8 @@ class BaseExchange():
                        to_account: str, 
                        params={}) -> None:
         raise NotImplementedError
-    def set_hedge_mode(self) -> None: 
+    def set_hedge_mode(self,
+                       symbol: str)-> None: 
         raise NotImplementedError
     def get_upnl(self) -> str: 
         raise NotImplementedError

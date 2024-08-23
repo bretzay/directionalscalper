@@ -81,8 +81,13 @@ class BybitExchange():#BaseExchange):
         except Exception as e:
             logging.error(f"Error occured during funds transfer: {e}")
     
-    def set_hedge_mode(self) -> None:
-        ...
+    def set_hedge_mode(self,
+                       symbol: str) -> None:
+        try:
+            self.exchange.set_position_mode(hedged=True, symbol=symbol)
+        except Exception as e:
+            logging.error(f"Unknown error occured in set_position_mode: {e}")
+        
     def get_upnl(self) -> str: ...
     def get_latest_trades(self, symbol: str) -> list: ...
 
