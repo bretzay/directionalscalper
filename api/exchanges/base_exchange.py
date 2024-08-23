@@ -32,53 +32,71 @@ class Positions:
         "entry_price": 0.0
     })
 
-class BaseExchange(ABC):
+class BaseExchange():
     # Account information / Changes
-    @abstractmethod
-    def get_balance(self) -> Decimal: ...
-    @abstractmethod
-    def transfer_funds(self) -> None: ...
-    @abstractmethod
-    def set_hedge_mode(self) -> None: ...
-    @abstractmethod
-    def get_upnl(self) -> str: ...
-    @abstractmethod
-    def get_latest_trades(self, symbol: str) -> list: ...
+    def get_balance(self, 
+                    quote: str = "USDT") -> Decimal:
+        raise NotImplementedError
+    def transfer_funds(self, 
+                       code: str, 
+                       amount: float, 
+                       from_account: str, 
+                       to_account: str, 
+                       params={}) -> None:
+        raise NotImplementedError
+    def set_hedge_mode(self) -> None: 
+        raise NotImplementedError
+    def get_upnl(self) -> str: 
+        raise NotImplementedError
+    def get_latest_trades(self, 
+                          symbol: str) -> list: 
+        raise NotImplementedError
     # Positions information
-    @abstractmethod
-    def get_last_active_time(self) : ...
-    @abstractmethod
-    def get_symbol_precision(self, symbol: str) -> int: ...
-    @abstractmethod
-    def get_position(self) -> Positions: ...
-    @abstractmethod
-    def get_all_positions(self) -> list[Positions]: ...
+    def get_last_active_time(self) : 
+        raise NotImplementedError
+    def get_symbol_precision(self, 
+                             symbol: str) -> int: 
+        raise NotImplementedError
+    def get_position(self) -> Positions: 
+        raise NotImplementedError
+    def get_all_positions(self) -> list[Positions]: 
+        raise NotImplementedError
     # Order Creation
-    @abstractmethod
-    def create_entry_order(self) -> None: ...
-    @abstractmethod
-    def create_reduce_only_order(self) -> None: ...
-    @abstractmethod
-    def create_takeprofit_order(self) -> None: ...
+    def create_entry_order(self) -> None: 
+        raise NotImplementedError
+    def create_reduce_only_order(self) -> None: 
+        raise NotImplementedError
+    def create_takeprofit_order(self) -> None: 
+        raise NotImplementedError
     # Order Cancelation
-    @abstractmethod
-    def cancel_order(self, order_id: str, symbol: str) -> None: ...
-    @abstractmethod
-    def cancel_all_orders(self, symbol: str = None, category: str = "linear") -> None: ...
+    def cancel_order(self, 
+                     order_id: str, 
+                     symbol: str) -> None: 
+        raise NotImplementedError
+    def cancel_all_orders(self, 
+                          symbol: str = None, 
+                          category: str = "linear") -> None: 
+        raise NotImplementedError
     # Leverage + Margin
-    @abstractmethod
-    def get_max_leverage(self, symbol) -> int: ...
-    @abstractmethod
-    def get_leverage_tiers(self, symbol): ...
-    @abstractmethod
-    def set_cross_margin(self, symbol: str) -> None: ...
-    @abstractmethod
-    def set_leverage(self, symbol) -> None: ...
+    def get_max_leverage(self, 
+                         symbol) -> int: 
+        raise NotImplementedError
+    def get_leverage_tiers(self, 
+                           symbol): 
+        raise NotImplementedError
+    def set_cross_margin(self, 
+                         symbol: str) -> None: 
+        raise NotImplementedError
+    def set_leverage(self, 
+                     symbol) -> None: 
+        raise NotImplementedError
     # Probably useless?
-    @abstractmethod
-    def get_symbol_info(self, symbol: str) -> dict[str, str|bool|int|float|dict]: ...
-    @abstractmethod
-    def get_position_info(self, symbol: str): ...
+    def get_symbol_info(self, 
+                        symbol: str) -> dict[str, str|bool|int|float|dict]: 
+        raise NotImplementedError
+    def get_position_info(self, 
+                          symbol: str): 
+        raise NotImplementedError
 
 
 from api.exchanges import * # Imports exchanges files here to avoid circular import
@@ -89,7 +107,7 @@ def initiate_exchange(config: ApiConfig) -> BaseExchange:
     Available exchanges: 
         - Bybit
     """
-    AVAILABLE_EXCHANGES: list[str] = ["Bybit", "Binance"]
+    AVAILABLE_EXCHANGES: list[str] = ["Bybit",]
     match (config.exchange_name.lower()):
         case "bybit":
             return bybit.BybitExchange(config)

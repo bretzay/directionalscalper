@@ -1,6 +1,7 @@
 
 import ccxt
 from decimal import Decimal
+from uuid import uuid4
 
 from utils.utils import createDecimal
 from utils.logger import Logger
@@ -30,12 +31,18 @@ class BybitExchange():#BaseExchange):
             "apiKey": self.api_config.credentials["api_key"],
             "secret": self.api_config.credentials["api_secret"]
         })
-    
+        print(f"Loading exchange {self.exchange} for API data.")
+        self.exchange.load_markets()
+        print(f"{self.exchange} has loaded successfully.")
+
+    # Account information / Changes
     @verify_ccxt_has("fetchBalance")
     def get_balance(self, quote: str = "USDT") -> Decimal:
         """Get the balance on the account, in the quote currency."""
         # Checks for spot or derivative account
-        account_type = "SPOT" if self.api_config.market_type == "spot" else "CONTRACT"
+        account_type = ("SPOT" if self.api_config.market_type == "spot"
+            else "CONTRACT" if self.api_config.market_type == "swap" 
+            else "UNIFIED")
 
         # Fetch the balance with params to specify the account type if needed
         try:
@@ -49,8 +56,35 @@ class BybitExchange():#BaseExchange):
             if total_balance > createDecimal(0.00, 2):
                 return total_balance
 
-        logging.info(f"There was no USDT found on this account.")
+        logging.info(f"There was no {quote} found on this account.")
         return None
+    
+    @verify_ccxt_has("transfer")
+    def transfer_funds(self, 
+                       coin: str, 
+                       amount: float, 
+                       from_account: str, 
+                       to_account: str, 
+                       params={}) -> None:
+        # Creates a unique transfer ID
+        params["transferId"] = str(uuid4())
+
+        try:
+            transfer_response = self.exchange.transfer(coin,
+                                          amount,
+                                          from_account,
+                                          to_account,
+                                          params)
+            logging.info(f"Funds transfered successfully. Details: {transfer_response}")
+        except ccxt.errors.PermissionDenied as e:
+            logging.error(f"API key used do not have access to funds transfer. Full error message: \n{e}")
+        except Exception as e:
+            logging.error(f"Error occured during funds transfer: {e}")
+    
+    def set_hedge_mode(self) -> None:
+        ...
+    def get_upnl(self) -> str: ...
+    def get_latest_trades(self, symbol: str) -> list: ...
 
     @verify_ccxt_has("cancelAllOrders")
     def cancel_all_orders(self, symbol: str = None, category: str = "linear") -> None:
@@ -82,4 +116,3 @@ class BybitExchange():#BaseExchange):
         except Exception as e:
             logging.error(f"An error occured while cancelling order {order_id} for {symbol}: {e}")
 
-        

@@ -26,7 +26,7 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
 
-    print(exchange.cancel_order("54445211","BTCUSDT"))
+    print(exchange.transfer_funds("BTC", 5, "234124", "azer"))
 
 
 if __name__ == "__main__":
