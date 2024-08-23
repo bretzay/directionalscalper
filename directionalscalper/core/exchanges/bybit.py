@@ -369,35 +369,6 @@ class BybitExchange(Exchange):
             logging.info(f"An error occurred while cancelling order {order_id} for {symbol}: {str(e)}")
             # Handle the exception as needed (e.g., retry, raise, etc.)
             return None
-   
-    def get_precision_and_limits_bybit(self, symbol):
-        # Fetch the market data
-        markets = self.exchange.fetch_markets()
-
-        # Filter for the specific symbol
-        for market in markets:
-            if market['symbol'] == symbol:
-                precision_amount = market['precision']['amount']
-                precision_price = market['precision']['price']
-                min_amount = market['limits']['amount']['min']
-
-                return precision_amount, precision_price, min_amount
-
-        return None, None, None
-
-    def get_market_precision_data_bybit(self, symbol):
-        # Fetch the market data
-        markets = self.exchange.fetch_markets()
-        
-        # Print the first market from the list
-        logging.info(markets[0])
-
-        # Filter for the specific symbol
-        for market in markets:
-            if market['symbol'] == symbol:
-                return market['precision']
-        
-        return None
 
     def transfer_funds_bybit(self, code: str, amount: float, from_account: str, to_account: str, params={}):
         """

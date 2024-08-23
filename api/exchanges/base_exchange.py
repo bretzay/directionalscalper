@@ -72,6 +72,9 @@ class BaseExchange():
         """
         raise NotImplementedError
     # Positions information
+    def set_monitor_symbol(self, 
+                           symbol: str) -> None:
+        raise NotImplementedError
     def get_last_active_time(self) : 
         raise NotImplementedError
     def get_symbol_precision(self, 

@@ -2,6 +2,7 @@ import datetime
 import ccxt
 from decimal import Decimal
 from uuid import uuid4
+from typing import DefaultDict
 
 from utils.utils import createDecimal
 from utils.logger import Logger
@@ -31,6 +32,9 @@ class BybitExchange():#BaseExchange):
             "apiKey": self.api_config.credentials["api_key"],
             "secret": self.api_config.credentials["api_secret"]
         })
+        # Cached variables
+        self.symbol_manager = DefaultDict(int)
+
         print(f"Loading exchange {self.exchange} for API data.")
         self.exchange.load_markets()
         print(f"{self.exchange} has loaded successfully.")
@@ -136,6 +140,22 @@ class BybitExchange():#BaseExchange):
         :return List: Recent trades. 
         """
         return self.exchange.fetch_trades(symbol, since, limit)
+
+    # Positions information
+    def set_monitor_symbol(self, 
+                           symbol: str) -> None:
+        raise NotImplementedError
+    def get_last_active_time(self) -> None:
+        raise NotImplementedError
+    
+    def get_symbol_precision(self, 
+                             symbol: str) -> int: 
+        raise NotImplementedError
+    def get_position(self) -> None: 
+        raise NotImplementedError
+    def get_all_positions(self) -> None: 
+        raise NotImplementedError
+
 
     @verify_ccxt_has("cancelAllOrders")
     def cancel_all_orders(self, 
