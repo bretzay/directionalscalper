@@ -58,7 +58,7 @@ class BybitExchange():#BaseExchange):
 
         logging.info(f"There was no {quote} found on this account.")
         return None
-    
+
     @verify_ccxt_has("transfer")
     def transfer_funds(self, 
                        coin: str, 
@@ -80,14 +80,15 @@ class BybitExchange():#BaseExchange):
             logging.error(f"API key used do not have access to funds transfer. Full error message: \n{e}")
         except Exception as e:
             logging.error(f"Error occured during funds transfer: {e}")
-    
+
+    @verify_ccxt_has("setPositionMode")
     def set_hedge_mode(self,
                        symbol: str) -> None:
         try:
             self.exchange.set_position_mode(hedged=True, symbol=symbol)
         except Exception as e:
-            logging.error(f"Unknown error occured in set_position_mode: {e}")
-        
+            logging.error(f"Unknown error occured in set_hedge_mode: {e}")
+
     def get_upnl(self) -> str: ...
     def get_latest_trades(self, symbol: str) -> list: ...
 
