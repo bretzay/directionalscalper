@@ -11,7 +11,7 @@ from api.api_config import ApiConfig
 FILENAME: str = __name__.split(".")[-1]
 logging = Logger(logger_name= "api_handler_bybit", filename= f"{FILENAME}.log", stream= True,level= "debug")
 
-def verify_ccxt_has(ccxt_function: None):
+def verify_ccxt_has(ccxt_function: str):
     """Checks for the selected function name and """
     def decorator(func):
         def wrapper(*args):
@@ -66,10 +66,20 @@ class BybitExchange():#BaseExchange):
         if symbol:
             market: ccxt = self.exchange.market(symbol)
             params["symbol"] = market["id"]
-
-        response = self.exchange.cancel_all_orders(params = params)
-        logging.info(f"Successfully cancelled orders {response}")
         
+        try:
+            response = self.exchange.cancel_all_orders(params = params)
+            logging.info(f"Successfully cancelled orders {response}")
+        except Exception as e:
+            logging.error(f"An error occured while cancelling all orders: {e}")
 
-    def cancel_order(self):
-        ...
+    @verify_ccxt_has("cancelOrders")
+    def cancel_order(self, order_id: str, symbol: str) -> None:
+        """Cancel the order specified by its order id and symbol."""
+        try: 
+            self.exchange.cancel_order(order_id, symbol)
+            logging.info(f"Order {order_id} for {symbol} cancelled successfully.")
+        except Exception as e:
+            logging.error(f"An error occured while cancelling order {order_id} for {symbol}: {e}")
+
+        
