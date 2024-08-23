@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
 import time
 from decimal import Decimal, getcontext
+from textwrap import dedent
 
 # Implemented exchanges list:
 from api.api_config import ApiConfig
@@ -94,9 +95,13 @@ def initiate_exchange(config: ApiConfig) -> BaseExchange:
             return bybit.BybitExchange(config)
         
         case _:
-            print(f"""
-This exchange seems to not be implemented: {config.exchange_name.lower()}.
-List of available exchanges: {', '.join(AVAILABLE_EXCHANGES)}
-Verify initiate_exchange function if you're a developper.
-""")
+            # Using dedent to keep the indentation clean
+            print(dedent(
+                f"""\
+                This exchange seems to not be implemented: {config.exchange_name.lower()}
+                List of available exchanges: {', '.join(AVAILABLE_EXCHANGES)}
+
+                Verify initiate_exchange function if you're a developper.\
+                """)
+                )
             exit()

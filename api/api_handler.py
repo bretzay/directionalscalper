@@ -26,20 +26,7 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
 
-    print(exchange.get_balance())
-    
-    # print(exchange)
-if __name__ == "__main__":
-    main()
+    print(exchange.cancel_all_orders())
 
-    #new_list = []
-    #print(new_list)r
-    #while True:
-    #    try:
-    #        if not sorted(new_list) == sorted(ranking_handler.cached_symbol):
-    #            print(f"The list {new_list} is different of {ranking_handler.cached_symbol}, changing its value.")
-    #            new_list = ranking_handler.cached_symbol.copy()
-    #            print(f"List {new_list} updated.")
-    #    except KeyboardInterrupt:
-    #        print("You stopped the bot")
-    #        exit()
+if __name__ == "__main__":
+   main()

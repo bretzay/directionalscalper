@@ -31,13 +31,13 @@ def createDecimal(num: float|str, precision: int = 40, recursion: bool = False) 
         
     #Recover the zeroes by adding them back and rounding if needed
     while zero_in_memory:
-        num = decimal_recover_zero(num, precision)
+        num = _decimal_recover_zero(num, precision)
         num = ".".join(num)
         zero_in_memory -= 1
     num = context.create_decimal(num)
     return num
 
-def decimal_recover_zero(number: createDecimal, precision: int):
+def _decimal_recover_zero(number: createDecimal, precision: int):
     splited_num = str(number).split(".")
     while len(splited_num[1]) >= precision:
         if splited_num[1][-1] in "56789":
@@ -47,5 +47,3 @@ def decimal_recover_zero(number: createDecimal, precision: int):
         splited_num[1] = splited_num[1].removesuffix(splited_num[1][-1])
     splited_num[1] = "0"+splited_num[1]
     return splited_num
-
-
