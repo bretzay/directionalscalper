@@ -56,7 +56,8 @@ class BaseExchange():
         Gets the unrealized PnL of the selected coin.
 
         :return Decimal: Number rounded to 2.
-        """        raise NotImplementedError
+        """
+        raise NotImplementedError
     def get_latest_trades(self, 
                           symbol: str,
                           since: int = None,

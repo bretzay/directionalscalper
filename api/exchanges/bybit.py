@@ -122,6 +122,7 @@ class BybitExchange():#BaseExchange):
                           for key,value in unrealized_pnl.items()}
         return unrealized_pnl
 
+    @verify_ccxt_has("fetchTrades")
     def get_latest_trades(self, 
                           symbol: str,
                           since: int = None,
