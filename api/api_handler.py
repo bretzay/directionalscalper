@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 
+import datetime
 import sys
 # Add the project root to the PYTHONPATH
 project_root = Path(__file__).resolve().parent.parent
@@ -26,8 +27,7 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
 
-    print(exchange.set_hedge_mode("BTCUSDT"))
-
+    print(exchange.get_latest_trades("DOGEUSDT"))
 
 if __name__ == "__main__":
     main()

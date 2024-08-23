@@ -36,21 +36,39 @@ class BaseExchange():
     # Account information / Changes
     def get_balance(self, 
                     quote: str = "USDT") -> Decimal:
+        """Get the balance on the account, in the quote currency."""
         raise NotImplementedError
     def transfer_funds(self, 
-                       code: str, 
+                       coin: str, 
                        amount: float, 
                        from_account: str, 
                        to_account: str, 
                        params={}) -> None:
+        """Creates a transfer ID and make a transfer from one account to the other of the amount of the selected coin."""
         raise NotImplementedError
     def set_hedge_mode(self,
-                       symbol: str)-> None: 
+                       symbol: str) -> None:
+        """Sets the account to two-way mode (hedge)."""
         raise NotImplementedError
-    def get_upnl(self) -> str: 
-        raise NotImplementedError
+    def get_upnl(self,
+                 symbol: str) -> Decimal:
+        """
+        Gets the unrealized PnL of the selected coin.
+
+        :return Decimal: Number rounded to 2.
+        """        raise NotImplementedError
     def get_latest_trades(self, 
-                          symbol: str) -> list: 
+                          symbol: str,
+                          since: int = None,
+                          limit: int = 100) -> list:
+        """
+        Fetch recent trades for the given symbol.
+
+        :param str symbol: Fetched symbol.
+        :param int since: Maximum fetching time in milliseconds
+        :param int limit: Maximum number of trades fetched.
+        :return List: Recent trades. 
+        """
         raise NotImplementedError
     # Positions information
     def get_last_active_time(self) : 
@@ -72,11 +90,18 @@ class BaseExchange():
     # Order Cancelation
     def cancel_order(self, 
                      order_id: str, 
-                     symbol: str) -> None: 
+                     symbol: str) -> None:
+        """Cancel the order specified by its order id and symbol."""
         raise NotImplementedError
     def cancel_all_orders(self, 
                           symbol: str = None, 
-                          category: str = "linear") -> None: 
+                          category: str = "linear") -> None:
+        """
+        Cancels all open orders for a specific category. If a symbol is provided, only orders for that symbol are cancelled.
+
+        :param symbol: Specific symbol to cancel, all if default.
+        :param category: The category of products for which to cancel orders (e.g., 'linear', 'inverse'). Default is 'linear'.
+        """
         raise NotImplementedError
     # Leverage + Margin
     def get_max_leverage(self, 

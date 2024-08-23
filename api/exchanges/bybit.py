@@ -1,4 +1,4 @@
-
+import datetime
 import ccxt
 from decimal import Decimal
 from uuid import uuid4
@@ -37,7 +37,8 @@ class BybitExchange():#BaseExchange):
 
     # Account information / Changes
     @verify_ccxt_has("fetchBalance")
-    def get_balance(self, quote: str = "USDT") -> Decimal:
+    def get_balance(self, 
+                    quote: str = "USDT") -> Decimal:
         """Get the balance on the account, in the quote currency."""
         # Checks for spot or derivative account
         account_type = ("SPOT" if self.api_config.market_type == "spot"
@@ -66,6 +67,7 @@ class BybitExchange():#BaseExchange):
                        from_account: str, 
                        to_account: str, 
                        params={}) -> None:
+        """Creates a transfer ID and make a transfer from one account to the other of the amount of the selected coin."""
         # Creates a unique transfer ID
         params["transferId"] = str(uuid4())
 
@@ -84,22 +86,65 @@ class BybitExchange():#BaseExchange):
     @verify_ccxt_has("setPositionMode")
     def set_hedge_mode(self,
                        symbol: str) -> None:
+        """Sets the account to two-way mode (hedge)."""
         try:
             self.exchange.set_position_mode(hedged=True, symbol=symbol)
+        except ccxt.errors.NoChange:
+            logging.info(f"No changes were made, hedge mode was already active.")
         except Exception as e:
             logging.error(f"Unknown error occured in set_hedge_mode: {e}")
 
-    def get_upnl(self) -> str: ...
-    def get_latest_trades(self, symbol: str) -> list: ...
+    @verify_ccxt_has("fetchPositions")
+    def get_upnl(self,
+                 symbol: str) -> Decimal:
+        """
+        Gets the unrealized PnL of the selected coin.
+
+        :return Decimal: Number rounded to 2.
+        """
+        # Get pos and initialize unrealized pnl
+        positions = self.exchange.fetch_positions([symbol])
+        unrealized_pnl = {"long": 0.0,
+                          "short": 0.0}
+        # Loop through symbol's positions
+        for position in positions:
+            uPnl = (position.get("unrealizedPnl", 0.0) 
+                    if position.get("unrealizedPnl", 0.0) 
+                    else 0.0)
+
+            side = position.get("side", None)
+            if side == "long":
+                unrealized_pnl["long"] += uPnl
+            elif side == "short":
+                unrealized_pnl["short"] += uPnl
+        # Make sure rounding is fine
+        unrealized_pnl = {key:createDecimal(value, 2)
+                          for key,value in unrealized_pnl.items()}
+        return unrealized_pnl
+
+    def get_latest_trades(self, 
+                          symbol: str,
+                          since: int = None,
+                          limit: int = 100) -> list:
+        """
+        Fetch recent trades for the given symbol.
+
+        :param str symbol: Fetched symbol.
+        :param int since: Maximum fetching time in milliseconds
+        :param int limit: Maximum number of trades fetched.
+        :return List: Recent trades. 
+        """
+        return self.exchange.fetch_trades(symbol, since, limit)
 
     @verify_ccxt_has("cancelAllOrders")
-    def cancel_all_orders(self, symbol: str = None, category: str = "linear") -> None:
+    def cancel_all_orders(self, 
+                          symbol: str = None, 
+                          category: str = "linear") -> None:
         """
         Cancels all open orders for a specific category. If a symbol is provided, only orders for that symbol are cancelled.
 
-        :param symbol: Optional. The market symbol (e.g., 'BTC/USDT') for which to cancel orders. If None, all orders in the specified category are cancelled.
+        :param symbol: Specific symbol to cancel, all if default.
         :param category: The category of products for which to cancel orders (e.g., 'linear', 'inverse'). Default is 'linear'.
-        :return Response: Response from the exchange indicating success or failure.
         """
         params = {"category": category}
 
@@ -114,7 +159,9 @@ class BybitExchange():#BaseExchange):
             logging.error(f"An error occured while cancelling all orders: {e}")
 
     @verify_ccxt_has("cancelOrders")
-    def cancel_order(self, order_id: str, symbol: str) -> None:
+    def cancel_order(self, 
+                     order_id: str, 
+                     symbol: str) -> None:
         """Cancel the order specified by its order id and symbol."""
         try: 
             self.exchange.cancel_order(order_id, symbol)
