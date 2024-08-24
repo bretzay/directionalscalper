@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import uuid4
 from typing import DefaultDict
 
+from utils.rate_limiter import rate_limiter
 from utils.utils import createDecimal
 from utils.logger import Logger
 from api.exchanges.base_exchange import BaseExchange
@@ -32,8 +33,6 @@ class BybitExchange():#BaseExchange):
             "apiKey": self.api_config.credentials["api_key"],
             "secret": self.api_config.credentials["api_secret"]
         })
-        # Cached variables
-        self.symbol_manager = DefaultDict(int)
 
         print(f"Loading exchange {self.exchange} for API data.")
         self.exchange.load_markets()
@@ -41,6 +40,7 @@ class BybitExchange():#BaseExchange):
 
     # Account information / Changes
     @verify_ccxt_has("fetchBalance")
+    @rate_limiter("GET_wallet-balance", 9, 1,  550, 5)
     def get_balance(self, 
                     quote: str = "USDT") -> Decimal:
         """Get the balance on the account, in the quote currency."""
@@ -65,6 +65,7 @@ class BybitExchange():#BaseExchange):
         return None
 
     @verify_ccxt_has("transfer")
+    @rate_limiter("POST_inter-transfer", 54, 60,  550, 5)
     def transfer_funds(self, 
                        coin: str, 
                        amount: float, 
@@ -88,6 +89,7 @@ class BybitExchange():#BaseExchange):
             logging.error(f"Error occured during funds transfer: {e}")
 
     @verify_ccxt_has("setPositionMode")
+    @rate_limiter("POST_inter-transfer", 54, 60,  550, 5)
     def set_hedge_mode(self,
                        symbol: str) -> None:
         """Sets the account to two-way mode (hedge)."""
@@ -98,7 +100,9 @@ class BybitExchange():#BaseExchange):
         except Exception as e:
             logging.error(f"Unknown error occured in set_hedge_mode: {e}")
 
+    # TODO: CHECK FOR UPNL IF IT WORKS, I CAN'T AS I CAN'T USE BYBIT
     @verify_ccxt_has("fetchPositions")
+    @rate_limiter("GET_position/list", 9, 1,  550, 5)
     def get_upnl(self,
                  symbol: str) -> Decimal:
         """
@@ -107,7 +111,11 @@ class BybitExchange():#BaseExchange):
         :return Decimal: Number rounded to 2.
         """
         # Get pos and initialize unrealized pnl
-        positions = self.exchange.fetch_positions([symbol])
+        positions: list = []
+        try:
+            positions = self.exchange.fetch_positions([symbol])
+        except ccxt.errors.BadSymbol as e:
+            logging.error(f"The symbol {symbol} seems to not be available on {FILENAME}.")
         unrealized_pnl = {"long": 0.0,
                           "short": 0.0}
         # Loop through symbol's positions
@@ -132,8 +140,9 @@ class BybitExchange():#BaseExchange):
                           since: int = None,
                           limit: int = 100) -> list:
         """
-        Fetch recent trades for the given symbol.
+        Fetch recent global trades for the given symbol.
 
+        No rate limit, that is public API.
         :param str symbol: Fetched symbol.
         :param int since: Maximum fetching time in milliseconds
         :param int limit: Maximum number of trades fetched.
@@ -141,18 +150,38 @@ class BybitExchange():#BaseExchange):
         """
         return self.exchange.fetch_trades(symbol, since, limit)
 
+
     # Positions information
-    def set_monitor_symbol(self, 
-                           symbol: str) -> None:
-        raise NotImplementedError
-    def get_last_active_time(self) -> None:
-        raise NotImplementedError
-    
-    def get_symbol_precision(self, 
-                             symbol: str) -> int: 
-        raise NotImplementedError
+    def get_symbol_data(self,
+                        symbol: str) -> dict:
+        symbol_data = {
+            "precision": 0,
+            "min_qty": 0,
+            "leverage": 0,
+            }
+
+        symbol_info = self.exchange.market(symbol)
+
+        if "info" in symbol_info:
+            # Gets the precision as 5 = 0.00001 (4 zero after the dot)
+            precision = str(
+                1 + symbol_info["precision"]["price"]
+                            ).replace("1","0",1)
+            precision = createDecimal(precision, len(precision))
+            symbol_data["precision"] = precision
+            
+            symbol_data["min_qty"] = symbol_info["limits"]["amount"]["min"]
+
+        positions = self.exchange.fetch_positions(symbol)
+
+        for position in positions:
+            symbol_data["leverage"] = createDecimal(position["leverage"], 0)
+
+        return symbol_data
+
     def get_position(self) -> None: 
         raise NotImplementedError
+    
     def get_all_positions(self) -> None: 
         raise NotImplementedError
 

@@ -24,7 +24,6 @@ def rate_limiter(_type: str,
     :returns function: Returns the function called if not going above the rate limit.
     """
     def decorator(function):
-
         def wrapper(*args, **kwargs):
             def is_max_all():
                 """
@@ -51,15 +50,17 @@ def rate_limiter(_type: str,
                              for time in timestamps 
                              if now - time < single_period]
             
-
             if len(timestamps) < max_calls_single and is_max_all():
                 timestamps.append(now)
                 return function(*args, **kwargs)
             elif len(timestamps) >= max_calls_single:
                 cooldown_for_next_rate = timestamps[-1] + single_period - now
-                logging.warning(f"{_type} rate reached its limit, waiting to clear the cache: {cooldown_for_next_rate:.2f} seconds.")
+                logging.warning(
+                    f"{_type} rate reached its limit, waiting to clear the cache: {cooldown_for_next_rate:.2f} seconds."
+                    )
                 time.sleep(cooldown_for_next_rate)
-                _usage[_type].clear()
-                logging.info(f"Single cache cleared.")
+                timestamps.clear()
+                print(timestamps)
+                logging.info(f"{_type} cache cleared.")
         return wrapper
     return decorator

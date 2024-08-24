@@ -38,6 +38,7 @@ class BaseExchange():
                     quote: str = "USDT") -> Decimal:
         """Get the balance on the account, in the quote currency."""
         raise NotImplementedError
+
     def transfer_funds(self, 
                        coin: str, 
                        amount: float, 
@@ -46,10 +47,12 @@ class BaseExchange():
                        params={}) -> None:
         """Creates a transfer ID and make a transfer from one account to the other of the amount of the selected coin."""
         raise NotImplementedError
+
     def set_hedge_mode(self,
                        symbol: str) -> None:
         """Sets the account to two-way mode (hedge)."""
         raise NotImplementedError
+
     def get_upnl(self,
                  symbol: str) -> Decimal:
         """
@@ -58,6 +61,7 @@ class BaseExchange():
         :return Decimal: Number rounded to 2.
         """
         raise NotImplementedError
+
     def get_latest_trades(self, 
                           symbol: str,
                           since: int = None,
@@ -71,32 +75,46 @@ class BaseExchange():
         :return List: Recent trades. 
         """
         raise NotImplementedError
+
+
     # Positions information
-    def set_monitor_symbol(self, 
-                           symbol: str) -> None:
+    def get_symbol_data(self,
+                    symbol: str) -> dict[str, Decimal | int]:
+        def _get_symbol_precision() -> int: 
+            raise NotImplementedError
+
+        def _get_min_qty() -> Decimal:
+            raise NotImplementedError
+
+        def _get_symbol_leverage() -> Decimal:
+            raise NotImplementedError
         raise NotImplementedError
-    def get_last_active_time(self) : 
-        raise NotImplementedError
-    def get_symbol_precision(self, 
-                             symbol: str) -> int: 
-        raise NotImplementedError
+
     def get_position(self) -> Positions: 
         raise NotImplementedError
+
     def get_all_positions(self) -> list[Positions]: 
         raise NotImplementedError
+
+
     # Order Creation
     def create_entry_order(self) -> None: 
         raise NotImplementedError
+
     def create_reduce_only_order(self) -> None: 
         raise NotImplementedError
+
     def create_takeprofit_order(self) -> None: 
         raise NotImplementedError
+
+
     # Order Cancelation
     def cancel_order(self, 
                      order_id: str, 
                      symbol: str) -> None:
         """Cancel the order specified by its order id and symbol."""
         raise NotImplementedError
+
     def cancel_all_orders(self, 
                           symbol: str = None, 
                           category: str = "linear") -> None:
@@ -107,23 +125,31 @@ class BaseExchange():
         :param category: The category of products for which to cancel orders (e.g., 'linear', 'inverse'). Default is 'linear'.
         """
         raise NotImplementedError
+
+
     # Leverage + Margin
     def get_max_leverage(self, 
                          symbol) -> int: 
         raise NotImplementedError
+
     def get_leverage_tiers(self, 
                            symbol): 
         raise NotImplementedError
+
     def set_cross_margin(self, 
                          symbol: str) -> None: 
         raise NotImplementedError
+
     def set_leverage(self, 
                      symbol) -> None: 
         raise NotImplementedError
+
+
     # Probably useless?
     def get_symbol_info(self, 
                         symbol: str) -> dict[str, str|bool|int|float|dict]: 
         raise NotImplementedError
+
     def get_position_info(self, 
                           symbol: str): 
         raise NotImplementedError

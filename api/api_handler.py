@@ -20,14 +20,6 @@ from api.exchanges.base_exchange import BaseExchange, initiate_exchange
 
 logging = Logger(logger_name= "api_handler", filename= "Api.log", stream= True,level= "debug")
 
-@rate_limiter("test", 500, 50, 20000)
-def test_func():
-    pass
-
-@rate_limiter("test2", 60, 5)
-def test_func2():
-    pass
-
 # All this is just for tests purposes
 def main():
     config: Config = Config("configs/config.json")
@@ -35,10 +27,9 @@ def main():
     # print(apiConfig)
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
-
-    while True:
-        test_func()
-        test_func2()
+    
+    print(exchange.get_symbol_data("DOGEUSDT"))
 
 if __name__ == "__main__":
-    main()
+    print(createDecimal("1.23144", 3))
+    #main()
