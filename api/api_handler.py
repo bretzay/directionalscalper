@@ -28,8 +28,7 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
     
-    print(exchange.get_symbol_data("DOGEUSDT"))
+    print(exchange.get_position_data("ETHUSDT"))
 
 if __name__ == "__main__":
-    print(createDecimal("1.23144", 3))
-    #main()
+    main()

@@ -32,6 +32,7 @@ def createDecimal(num: float|str, precision: int | float | str = 40, recursion: 
     if float(num) >= 1:
         precision += len(num.split(".")[0])
     if float(num) == 0:
+        context = decimal.Context(prec= precision, rounding=decimal.ROUND_HALF_UP)
         return context.create_decimal(num)
     else:
         # Temporaly gets rid of the zeroes after the ".". Counts how many there was to return later

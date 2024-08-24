@@ -79,18 +79,11 @@ class BaseExchange():
 
     # Positions information
     def get_symbol_data(self,
-                    symbol: str) -> dict[str, Decimal | int]:
-        def _get_symbol_precision() -> int: 
-            raise NotImplementedError
-
-        def _get_min_qty() -> Decimal:
-            raise NotImplementedError
-
-        def _get_symbol_leverage() -> Decimal:
-            raise NotImplementedError
+                        symbol: str) -> dict:
+        """Returns the precision, min_qty and leverage of specified symbol as a dictionnary."""
         raise NotImplementedError
 
-    def get_position(self) -> Positions: 
+    def get_position_data(self) -> Positions: 
         raise NotImplementedError
 
     def get_all_positions(self) -> list[Positions]: 

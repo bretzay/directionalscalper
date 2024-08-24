@@ -117,19 +117,6 @@ class BybitExchange(Exchange):
 
         return best_bid_price, best_ask_price
 
-    def get_all_open_orders_bybit(self):
-        """
-        Fetch all open orders for all symbols from the Bybit API.
-        
-        :return: A list of open orders for all symbols.
-        """
-        try:
-            all_open_orders = self.exchange.fetch_open_orders()
-            return all_open_orders
-        except Exception as e:
-            print(f"An error occurred while fetching all open orders: {e}")
-            return []
-
     def get_balance_bybit_spot(self, quote):
         if self.exchange.has['fetchBalance']:
             try:
@@ -514,11 +501,6 @@ class BybitExchange(Exchange):
                 if len(data) == 2:
                     sides = ["long", "short"]
                     for side in [0, 1]:
-                        values[sides[side]]["qty"] = float(data[side]["contracts"])
-                        values[sides[side]]["price"] = float(data[side]["entryPrice"] or 0)
-                        values[sides[side]]["realised"] = round(float(data[side]["info"]["unrealisedPnl"] or 0), 4)
-                        values[sides[side]]["cum_realised"] = round(float(data[side]["info"]["cumRealisedPnl"] or 0), 4)
-                        values[sides[side]]["upnl"] = round(float(data[side]["info"]["unrealisedPnl"] or 0), 4)
                         values[sides[side]]["upnl_pct"] = round(float(data[side]["percentage"] or 0), 4)
                         values[sides[side]]["liq_price"] = float(data[side]["liquidationPrice"] or 0)
                         values[sides[side]]["entry_price"] = float(data[side]["entryPrice"] or 0)
@@ -586,51 +568,6 @@ class BybitExchange(Exchange):
             logging.info(f"Failed to set margin mode or margin mode already set to cross for symbol {symbol} with leverage {leverage}: {e}")
             return {"status": "error", "message": str(e)}
 
-    def setup_exchange_bybit(self, symbol) -> None:
-        values = {"position": False, "leverage": False}
-        try:
-            # Set the position mode to hedge
-            self.exchange.set_position_mode(hedged=True, symbol=symbol)
-            values["position"] = True
-        except Exception as e:
-            logging.info(f"An unknown error occurred in with set_position_mode: {e}")
-
-    def get_all_open_positions_bybit_spot(self, retries=10, delay_factor=10, max_delay=60) -> List[dict]:
-        now = datetime.now()
-        # Check if the shared cache is still valid
-        cache_duration = timedelta(seconds=30)  # Cache duration is 30 seconds
-        if self.open_positions_shared_cache and self.last_open_positions_time_shared and now - self.last_open_positions_time_shared < cache_duration:
-            return self.open_positions_shared_cache
-
-        # Using a semaphore to limit concurrent API requests
-        with self.open_positions_semaphore:
-            # Double-checking the cache inside the semaphore to ensure no other thread has refreshed it in the meantime
-            if self.open_positions_shared_cache and self.last_open_positions_time_shared and now - self.last_open_positions_time_shared < cache_duration:
-                return self.open_positions_shared_cache
-
-            for attempt in range(retries):
-                try:
-                    params = {
-                        'type': 'spot',  # Set the type to 'spot' for Bybit Spot trading
-                    }
-                    all_positions = self.exchange.fetch_positions(params=params)
-                    open_positions = [position for position in all_positions if float(position.get('contracts', position.get('size', 0))) != 0]
-                    
-                    # Update the shared cache with the new data
-                    self.open_positions_shared_cache = open_positions
-                    self.last_open_positions_time_shared = now
-                    return open_positions
-                except Exception as e:
-                    is_rate_limit_error = "Too many visits" in str(e) or (hasattr(e, 'response') and e.response.status_code == 403)
-                    if is_rate_limit_error and attempt < retries - 1:
-                        delay = min(delay_factor * (attempt + 1), max_delay)  # Exponential delay with a cap
-                        logging.info(f"Rate limit on get_all_open_positions_bybit_spot hit, waiting for {delay} seconds before retrying...")
-                        time.sleep(delay)
-                        continue
-                    else:
-                        logging.info(f"Error fetching open positions: {e}")
-                        return []
-                    
     def get_all_open_positions_bybit(self, retries=10, delay_factor=10, max_delay=60) -> List[dict]:
         now = datetime.now()
 
@@ -718,68 +655,6 @@ class BybitExchange(Exchange):
             logging.info(f"Error fetching leverage tiers for {symbol}: {e}")
             return None
 
-    def get_open_take_profit_orders(self, symbol, side):
-        """
-        Fetches open take profit orders for the given symbol and side.
-        
-        :param str symbol: The trading pair symbol.
-        :param str side: The side ("buy" or "sell") of the TP orders to fetch.
-        :return: A list of take profit order structures.
-        """
-        # First, fetch the open orders
-        response = self.exchange.get_open_orders(symbol)
-        
-        # Filter the orders for take profits (reduceOnly) and the specified side
-        tp_orders = [
-            order for order in response
-            if order.get('info', {}).get('reduceOnly', False) and order.get('side', '').lower() == side.lower()
-        ]
-        
-        # If necessary, you can further parse the orders here using self.parse_order or similar methods
-        
-        return tp_orders
-
-    # def get_all_open_orders(self):
-    #     """Fetches open orders for all symbols."""
-    #     for _ in range(self.max_retries):
-    #         try:
-    #             open_orders = self.exchange.fetch_open_orders()
-    #             return open_orders
-    #         except ccxt.RateLimitExceeded:
-    #             logging.info(f"Rate limit exceeded when fetching open orders. Retrying in {self.retry_wait} seconds...")
-    #             time.sleep(self.retry_wait)
-    #     logging.info(f"Failed to fetch open orders after {self.max_retries} retries.")
-    #     return []
-
-    # def get_open_orders(self, symbol):
-    #     """Fetches open orders for the given symbol."""
-    #     for _ in range(self.max_retries):
-    #         try:
-    #             open_orders = self.exchange.fetch_open_orders(symbol)
-    #             #logging.info(f"Open orders {open_orders}")
-    #             return open_orders
-    #         except ccxt.RateLimitExceeded:
-    #             logging.info(f"Rate limit exceeded when fetching open orders for {symbol}. Retrying in {self.retry_wait} seconds...")
-    #             time.sleep(self.retry_wait)
-    #     logging.info(f"Failed to fetch open orders for {symbol} after {self.max_retries} retries.")
-    #     return []
-
-    def get_all_open_orders(self):
-        """Fetches open orders for all symbols."""
-        for _ in range(self.max_retries):
-            try:
-                with self.rate_limiter:
-                    open_orders = self.exchange.fetch_open_orders()
-                return open_orders
-            except RateLimitExceeded:
-                logging.info(f"Rate limit exceeded when fetching open orders. Retrying in {self.retry_wait} seconds...")
-                time.sleep(self.retry_wait)
-            except Exception as e:
-                logging.error(f"Error fetching open orders: {e}")
-                logging.error(traceback.format_exc())
-        logging.info(f"Failed to fetch open orders after {self.max_retries} retries.")
-        return []
-
     def get_open_orders(self, symbol, max_retries=100, retry_wait=1):
         """Fetches open orders for the given symbol with exponential backoff."""
         backoff = retry_wait
@@ -801,24 +676,6 @@ class BybitExchange(Exchange):
                 break
         logging.info(f"Failed to fetch open orders for {symbol} after {max_retries} retries.")
         return []
-
-    # def get_open_orders(self, symbol):
-    #     """Fetches open orders for the given symbol."""
-    #     for _ in range(self.max_retries):
-    #         try:
-    #             with self.rate_limiter:
-    #                 open_orders = self.exchange.fetch_open_orders(symbol)
-    #             return open_orders
-    #         except RateLimitExceeded:
-    #             logging.info(f"Rate limit exceeded when fetching open orders for {symbol}. Retrying in {self.retry_wait} seconds...")
-    #             time.sleep(self.retry_wait)
-    #         except Exception as e:
-    #             logging.error(f"Error fetching open orders for {symbol}: {e}")
-    #             logging.error(traceback.format_exc())
-    #     logging.info(f"Failed to fetch open orders for {symbol} after {self.max_retries} retries.")
-    #     return []
-
-
 
     def get_open_orders_bybit_unified(self, symbol: str) -> list:
         open_orders_list = []
@@ -944,60 +801,6 @@ class BybitExchange(Exchange):
         else:
             raise ValueError(f"Unsupported order type: {order_type}")
 
-    def postonly_create_take_profit_order_bybit(self, symbol, order_type, side, amount, price=None, positionIdx=1, reduce_only=True, post_only=True):
-        if order_type == 'limit':
-            if price is None:
-                raise ValueError("A price must be specified for a limit order")
-
-            if side not in ["buy", "sell"]:
-                raise ValueError(f"Invalid side: {side}")
-
-            params = {"reduceOnly": reduce_only, "postOnly": post_only}
-            return self.create_limit_order_bybit(symbol, side, amount, price, positionIdx=positionIdx, params=params)
-        else:
-            raise ValueError(f"Unsupported order type: {order_type}")
-        
-    def create_market_order_bybit_spot(self, symbol: str, side: str, qty: float, marketUnit=None, isLeverage=0, orderLinkId=None, orderFilter=None, takeProfit=None, stopLoss=None, tpOrderType=None, slOrderType=None, tpLimitPrice=None, slLimitPrice=None):
-        try:
-            # Define the 'params' dictionary to include additional parameters
-            params = {
-                'isLeverage': isLeverage,
-            }
-
-            # Add optional parameters to the 'params' dictionary if provided
-            if marketUnit:
-                params['marketUnit'] = marketUnit
-            if orderLinkId:
-                params['orderLinkId'] = orderLinkId
-            if orderFilter:
-                params['orderFilter'] = orderFilter
-            if takeProfit:
-                params['takeProfit'] = str(takeProfit)
-            if stopLoss:
-                params['stopLoss'] = str(stopLoss)
-            if tpOrderType:
-                params['tpOrderType'] = tpOrderType
-            if slOrderType:
-                params['slOrderType'] = slOrderType
-            if tpLimitPrice:
-                params['tpLimitPrice'] = str(tpLimitPrice)
-            if slLimitPrice:
-                params['slLimitPrice'] = str(slLimitPrice)
-
-            # Create the market order using CCXT's 'create_order' function
-            order = self.exchange.create_order(
-                symbol=symbol,
-                type='market',
-                side=side,
-                amount=qty,
-                params=params
-            )
-
-            return order
-        except Exception as e:
-            logging.info(f"An error occurred while creating market order on Bybit: {e}")
-            return None
-        
     def cancel_order_by_id(self, order_id, symbol):
         try:
             # Call the updated cancel_order method
@@ -1027,28 +830,6 @@ class BybitExchange(Exchange):
 
         except Exception as e:
             logging.info(f"An unknown error occurred in cancel_take_profit_orders: {e}")
-
-    def get_take_profit_order_quantity_bybit(self, symbol, side):
-        side = side.lower()
-        side_map = {"long": "buy", "short": "sell"}
-        side = side_map.get(side, side)
-        total_qty = 0
-        
-        try:
-            open_orders = self.exchange.fetch_open_orders(symbol)
-            position_idx_map = {"buy": 1, "sell": 2}
-
-            for order in open_orders:
-                if (
-                    order['side'].lower() == side
-                    and order['info'].get('reduceOnly')
-                    and order['info'].get('positionIdx') == position_idx_map[side]
-                ):
-                    total_qty += order.get('amount', 0)  # Assuming 'amount' contains the order quantity
-        except Exception as e:
-            logging.info(f"An unknown error occurred in get_take_profit_order_quantity_bybit: {e}")
-
-        return total_qty
 
     def retry_api_call(self, function, *args, max_retries=100, base_delay=10, max_delay=60, **kwargs):
         retries = 0
@@ -1099,37 +880,6 @@ class BybitExchange(Exchange):
         for leverage in sorted_leverage_sizes:
             trade_qty = max_trade_qty * leverage  # Calculate trade quantity based on leverage
             print(f"Leverage: {leverage}x, Trade Quantity: {trade_qty}")
-
-    # Bybit calc lot size based on spread
-    def spread_based_entry_size_bybit(self, symbol, spread, min_order_qty):
-        current_price = self.get_current_price(symbol)
-        logging.info(f"Current price debug: {current_price}")
-        entry_amount = min_order_qty + (spread * current_price) / 100
-
-        return entry_amount
-
-    def bybit_fetch_precision(self, symbol):
-        try:
-            markets = self.exchange.fetch_derivatives_markets()
-            for market in markets['result']['list']:
-                if market['symbol'] == symbol:
-                    qty_step = market['lotSizeFilter']['qtyStep']
-                    self.market_precisions[symbol] = {'amount': float(qty_step)}
-                    break
-        except Exception as e:
-            logging.info(f"Exception in bybit_fetch_precision: {e}")
-
-    def get_market_tick_size_bybit(self, symbol):
-        # Fetch the market data
-        markets = self.exchange.fetch_markets()
-
-        # Filter for the specific symbol
-        for market in markets:
-            if market['symbol'] == symbol:
-                tick_size = market['info']['priceFilter']['tickSize']
-                return tick_size
-        
-        return None
 
     def fetch_recent_trades(self, symbol, since=None, limit=100):
         """
@@ -1197,30 +947,3 @@ class BybitExchange(Exchange):
                         unrealized_pnl['short'] = None
 
         return unrealized_pnl
-
-    def process_position_data(self, open_position_data):
-        position_details = {}
-
-        for position in open_position_data:
-            info = position.get('info', {})
-            symbol = info.get('symbol', '').split(':')[0]  # Splitting to get the base symbol
-
-            # Ensure 'size', 'side', and 'avgPrice' keys exist in the info dictionary
-            if 'size' in info and 'side' in info and 'avgPrice' in info:
-                size = float(info['size'])
-                side = info['side'].lower()
-                avg_price = float(info['avgPrice'])
-
-                # Initialize the nested dictionary if the symbol is not already in position_details
-                if symbol not in position_details:
-                    position_details[symbol] = {'long': {'qty': 0, 'avg_price': None}, 'short': {'qty': 0, 'avg_price': None}}
-
-                # Update the quantities and average prices based on the side of the position
-                if side == 'buy':
-                    position_details[symbol]['long']['qty'] += size
-                    position_details[symbol]['long']['avg_price'] = avg_price
-                elif side == 'sell':
-                    position_details[symbol]['short']['qty'] += size
-                    position_details[symbol]['short']['avg_price'] = avg_price
-
-        return position_details

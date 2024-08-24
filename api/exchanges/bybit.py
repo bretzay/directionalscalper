@@ -7,7 +7,7 @@ from typing import DefaultDict
 from utils.rate_limiter import rate_limiter
 from utils.utils import createDecimal
 from utils.logger import Logger
-from api.exchanges.base_exchange import BaseExchange
+from api.exchanges.base_exchange import BaseExchange, Positions
 from api.api_config import ApiConfig
 
 
@@ -152,8 +152,11 @@ class BybitExchange():#BaseExchange):
 
 
     # Positions information
+    @verify_ccxt_has("fetchPositions")
+    @rate_limiter("GET_position/list", 9, 1,  550, 5)
     def get_symbol_data(self,
                         symbol: str) -> dict:
+        """Returns the precision, min_qty and leverage of specified symbol as a dictionnary."""
         symbol_data = {
             "precision": 0,
             "min_qty": 0,
@@ -167,7 +170,7 @@ class BybitExchange():#BaseExchange):
             precision = str(
                 1 + symbol_info["precision"]["price"]
                             ).replace("1","0",1)
-            precision = createDecimal(precision, len(precision))
+            precision = len(precision.split(".")[1])
             symbol_data["precision"] = precision
             
             symbol_data["min_qty"] = symbol_info["limits"]["amount"]["min"]
@@ -179,9 +182,66 @@ class BybitExchange():#BaseExchange):
 
         return symbol_data
 
-    def get_position(self) -> None: 
-        raise NotImplementedError
-    
+    @verify_ccxt_has("fetchPositions")
+    @rate_limiter("GET_position/list", 9, 1,  550, 5)
+    def get_position_data(self,
+                          symbol: str) -> Positions :
+        """
+        Create position object for the specified symbol.
+        
+        Position object contains:
+        - The symbol's name
+        
+        Its attributes for each side:
+        - Quantity
+        - Price
+        - Realised gains
+        - Cumulated realised gains
+        - Unrealised gains
+        - Unrealised percent
+        - Liquidation price
+        - Entry price
+        """
+        data = []
+        try:
+            data = self.exchange.fetch_positions(symbol)
+        except Exception as e:
+            logging.error(f"There was an error in get_position_data: {e}")
+        if not len(data) == 2: return
+        long = data[0]
+        short = data[1]
+        return Positions(
+            symbol = symbol,
+            long = {
+                "qty": long["contracts"],
+                "price": long["entryPrice"] or 0,
+                "realised": createDecimal(long["realizedPnl"] or 0, 2),
+                "cum_realised": createDecimal(long["info"]["cumRealisedPnl"], 2),
+                "upnl": createDecimal(long["info"]["unrealisedPnl"], 2),
+                "upnl_pct": createDecimal(long["percentage"] or 0, 2),
+                "liq_price": createDecimal(
+                    long["liquidationPrice"] or 0, 
+                    max(len(long["liquidationPrice"] or ""), 5)),
+                "entry_price": createDecimal(
+                    long["entryPrice"] or 0, 
+                    max(len(long["entryPrice"] or ""), 5))
+                },
+            short = {
+                "qty": short["contracts"],
+                "price": short["entryPrice"] or 0,
+                "realised": createDecimal(short["realizedPnl"] or 0, 2),
+                "cum_realised": createDecimal(short["info"]["cumRealisedPnl"], 2),
+                "upnl": createDecimal(short["info"]["unrealisedPnl"], 2),
+                "upnl_pct": createDecimal(short["percentage"] or 0, 2),
+                "liq_price": createDecimal(
+                    short["liquidationPrice"] or 0, 
+                    max(len(short["liquidationPrice"] or ""), 5)),
+                "entry_price": createDecimal(
+                    short["entryPrice"] or 0,
+                    max(len(short["entryPrice"] or ""), 5))
+                }
+            )
+
     def get_all_positions(self) -> None: 
         raise NotImplementedError
 
@@ -218,4 +278,3 @@ class BybitExchange():#BaseExchange):
             logging.info(f"Order {order_id} for {symbol} cancelled successfully.")
         except Exception as e:
             logging.error(f"An error occured while cancelling order {order_id} for {symbol}: {e}")
-

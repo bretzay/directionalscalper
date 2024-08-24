@@ -1,0 +1,23 @@
+Positions(
+    symbol='ETHUSDT',
+    long={
+        'qty': 0.0,
+        'price': 0,
+        'realised': Decimal('0'),
+        'cum_realised': Decimal('0'),
+        'upnl': Decimal('0'),
+        'upnl_pct': Decimal('0'),
+        'liq_price': Decimal('0'),
+        'entry_price': Decimal('0')
+    },
+    short={
+        'qty': 0.0,
+        'price': 0,
+        'realised': Decimal('0'),
+        'cum_realised': Decimal('0'),
+        'upnl': Decimal('0'),
+        'upnl_pct': Decimal('0'),
+        'liq_price': Decimal('0'),
+        'entry_price': Decimal('0')
+    }
+)
