@@ -278,3 +278,28 @@ class BybitExchange():#BaseExchange):
             logging.info(f"Order {order_id} for {symbol} cancelled successfully.")
         except Exception as e:
             logging.error(f"An error occured while cancelling order {order_id} for {symbol}: {e}")
+
+    @verify_ccxt_has("fetchMarketLeverageTiers")
+    def get_max_leverage(self,
+            symbol
+    ):
+        """Get the maximum leverage for specified symbol."""
+        try:
+            # Fetch leverage tiers for the symbol
+            leverage_tiers = self.exchange.fetch_market_leverage_tiers(symbol)
+        except Exception as e:
+            logging.error(f"Error retrieving leverage tiers for {symbol}: {e}")
+            return None
+        
+        # Process leverage tiers to find the maximum leverage
+        max_leverage = max([tier['maxLeverage'] 
+                            for tier in leverage_tiers 
+                            if 'maxLeverage' in tier])
+        logging.info(f"Maximum leverage for symbol {symbol}: {max_leverage}")
+
+        return max_leverage
+    
+
+
+
+

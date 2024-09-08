@@ -28,7 +28,7 @@ def main():
     ranking_handler: Ranking_handler = Ranking_handler(apiConfig, config)
     exchange: BaseExchange = initiate_exchange(apiConfig)
     
-    print(exchange.get_position_data("ETHUSDT"))
+    print(exchange.get_max_leverage("ETHUSDT"))
 
 if __name__ == "__main__":
     main()
