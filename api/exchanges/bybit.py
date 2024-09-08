@@ -1,4 +1,4 @@
-import datetime
+import time
 import ccxt
 from decimal import Decimal
 from uuid import uuid4
@@ -33,7 +33,8 @@ class BybitExchange():#BaseExchange):
             "apiKey": self.api_config.credentials["api_key"],
             "secret": self.api_config.credentials["api_secret"]
         })
-
+        self.cache_time = 0
+        self.cache_positions_list = []
         print(f"Loading exchange {self.exchange} for API data.")
         self.exchange.load_markets()
         print(f"{self.exchange} has loaded successfully.")
@@ -242,11 +243,29 @@ class BybitExchange():#BaseExchange):
                 }
             )
 
-    def get_all_positions(self) -> None: 
-        raise NotImplementedError
+    def get_all_positions(self) -> list[dict]:
+        now = time.time()
+        if self.cache_time + 30 < now:
+            return self.cache_positions_list
+        else:
+            return self._get_all_positions()
 
+    @rate_limiter("GET_position/list", 10, 1)
+    @verify_ccxt_has("fetchPositions")
+    def _get_all_positions(self) -> list[dict]:
+        try:
+            all_positions = self.exchange.fetch_positions()
+        except Exception as e:
+            logging.error(f"Error fetching open positions: {e}")
+        
+        self.cache_positions_list = [position
+                            for position in all_positions
+                            if float(position.get('contracts',0)) != 0]
+        self.cache_time = time.time()
+        return self.cache_positions_list
 
     @verify_ccxt_has("cancelAllOrders")
+    @rate_limiter("POST_order/cancel-all", 10, 1)
     def cancel_all_orders(self, 
                           symbol: str = None, 
                           category: str = "linear") -> None:
@@ -269,6 +288,7 @@ class BybitExchange():#BaseExchange):
             logging.error(f"An error occured while cancelling all orders: {e}")
 
     @verify_ccxt_has("cancelOrders")
+    @rate_limiter("POST_order/cancel", 10, 1)
     def cancel_order(self, 
                      order_id: str, 
                      symbol: str) -> None:
@@ -280,26 +300,48 @@ class BybitExchange():#BaseExchange):
             logging.error(f"An error occured while cancelling order {order_id} for {symbol}: {e}")
 
     @verify_ccxt_has("fetchMarketLeverageTiers")
-    def get_max_leverage(self,
+    def get_leverage(self,
             symbol
     ):
-        """Get the maximum leverage for specified symbol."""
+        """
+        Get leverage information about this symbol in three category.
+        ["max"] for max leverage
+        ["current"] for current leverage
+        ["tiers"] for tiers of leverage
+        """
+        leverage = {
+            "max" : None,
+            "current" : None,
+            "tiers" : None
+            }
         try:
             # Fetch leverage tiers for the symbol
-            leverage_tiers = self.exchange.fetch_market_leverage_tiers(symbol)
+            leverage["tiers"] = self.exchange.fetch_market_leverage_tiers(symbol)
         except Exception as e:
             logging.error(f"Error retrieving leverage tiers for {symbol}: {e}")
             return None
         
+        
         # Process leverage tiers to find the maximum leverage
-        max_leverage = max([tier['maxLeverage'] 
-                            for tier in leverage_tiers 
+        leverage["max"] = max([tier['maxLeverage'] 
+                            for tier in leverage["tiers"] 
                             if 'maxLeverage' in tier])
-        logging.info(f"Maximum leverage for symbol {symbol}: {max_leverage}")
+        leverage["current"] = self.get_symbol_datas(symbol)["leverage"]
 
-        return max_leverage
+        return leverage
     
-
-
+    @verify_ccxt_has("setLeverage")
+    @rate_limiter("POST_position/setLeverage", 10, 1)
+    def set_leverage(self,
+                     symbol) -> None:
+        """Set the symbol's leverage to max allowed."""
+        try:
+            self.exchange.set_leverage(max_lev := self.get_leverage(symbol)["max"], symbol)
+            logging.info(f"Leverage set to {max_lev} for symbol {symbol}")
+        except ccxt.BadRequest as e:
+            logging.info(f"{symbol} is already at max leverage.\n{e}")
+        except Exception as e:
+            logging.error(f"Error setting leverage {e}")
+        
 
 

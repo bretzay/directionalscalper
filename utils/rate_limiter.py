@@ -8,15 +8,15 @@ logging = Logger(logger_name= "rate_limiter", filename= f"{FILENAME}.log", strea
 
 _usage: dict[str, list[float]] = {}
 
-def rate_limiter(_type: str,
+def rate_limiter(rate_limit_name: str,
                  max_calls_single: int,
                  single_period: int = 5,
                  max_call_full: int = 550,
-                 full_period: int = 60):
+                 full_period: int = 5):
     """
     Limits the number of iteration of a function.
 
-    :params str _type: type of rate limit for the exchange. ()
+    :params str rate_limit_name: type of rate limit for the exchange. ()
     :params int max_calls_single: Maximum amount of calls in the period for the specific rate limit type.
     :params int single_period: Time to allow to max_calls_single in seconds.
     :params int max_call_full: Maximum amount of calls for the whole bot for the specific rate limit type.
@@ -43,9 +43,9 @@ def rate_limiter(_type: str,
             
             # Update timestamp
             now = time.time()
-            if _type not in _usage:
-                _usage[_type] = []
-            timestamps = _usage[_type]
+            if rate_limit_name not in _usage:
+                _usage[rate_limit_name] = []
+            timestamps = _usage[rate_limit_name]
             timestamps[:] = [time 
                              for time in timestamps 
                              if now - time < single_period]
@@ -56,11 +56,11 @@ def rate_limiter(_type: str,
             elif len(timestamps) >= max_calls_single:
                 cooldown_for_next_rate = timestamps[-1] + single_period - now
                 logging.warning(
-                    f"{_type} rate reached its limit, waiting to clear the cache: {cooldown_for_next_rate:.2f} seconds."
+                    f"{rate_limit_name} rate reached its limit, waiting to clear the cache: {cooldown_for_next_rate:.2f} seconds."
                     )
                 time.sleep(cooldown_for_next_rate)
                 timestamps.clear()
                 print(timestamps)
-                logging.info(f"{_type} cache cleared.")
+                logging.info(f"{rate_limit_name} cache cleared.")
         return wrapper
     return decorator

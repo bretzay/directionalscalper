@@ -121,30 +121,45 @@ class BaseExchange():
 
 
     # Leverage + Margin
-    def get_max_leverage(self, 
-                         symbol) -> int: 
-        raise NotImplementedError
-
-    def get_leverage_tiers(self, 
-                           symbol): 
-        raise NotImplementedError
-
-    def set_cross_margin(self, 
-                         symbol: str) -> None: 
+    def get_leverage(self, 
+                         symbol) -> dict:
+        """
+        Get leverage information about this symbol in three category.
+        ["max"] for max leverage
+        ["current"] for current leverage
+        ["tiers"] for tiers of leverage
+        """
         raise NotImplementedError
 
     def set_leverage(self, 
-                     symbol) -> None: 
+                     symbol) -> None:
+        """Set the symbol's leverage to max allowed."""
         raise NotImplementedError
 
 
     # Probably useless?
-    def get_symbol_info(self, 
+    def get_symbol_data(self, 
                         symbol: str) -> dict[str, str|bool|int|float|dict]: 
         raise NotImplementedError
 
-    def get_position_info(self, 
-                          symbol: str): 
+    def get_position_data(self, 
+                          symbol: str):
+        """
+        Create position object for the specified symbol.
+        
+        Position object contains:
+        - The symbol's name
+        
+        Its attributes for each side:
+        - Quantity
+        - Price
+        - Realised gains
+        - Cumulated realised gains
+        - Unrealised gains
+        - Unrealised percent
+        - Liquidation price
+        - Entry price
+        """ 
         raise NotImplementedError
 
 
